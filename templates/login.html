@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Login - QI Manager{% endblock %}
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-6 col-lg-4">
+        <div class="card">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <h2 class="card-title">Welcome to QI Manager</h2>
+                    <p class="text-muted">Sign in to continue</p>
+                </div>
+                <div class="list-group">
+                    <a href="/accounts/google/login/" class="list-group-item list-group-item-action d-flex align-items-center">
+                        <i class="bi bi-google text-danger me-3"></i>
+                        <div>
+                            <strong>Sign in with Google</strong>
+                            <small class="text-muted d-block">Use your Google account</small>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
