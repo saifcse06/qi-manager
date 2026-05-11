@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load static accounts_tags %}
+{% block page_title %}Permissions{% endblock %}
+{% block page_subtitle %}Manage system permissions and their role assignments{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h5 class="card-title mb-0"><i class="fas fa-key me-2 text-primary"></i>Permission Management</h5>
+                    {% if request.user|has_role:"Super Admin" or request.user|has_role:"Admin" %}
+                    <a href="{% url 'permission_create' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus me-2"></i>Add Permission
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Search Bar -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <form method="get" class="d-flex">
+                            <div class="input-group input-group-sm">
+                                <input type="text" name="search" class="form-control" placeholder="Search permissions..." value="{{ search_query|default:'' }}">
+                                <button class="btn btn-outline-light" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-md-4 offset-md-4 text-end">
+                        <span class="text-muted small">Showing {{ permissions.paginator.count }} permissions</span>
+                    </div>
+                </div>
+
+                <!-- Permissions Table -->
+                <div class="table-responsive">
+                    <table id="permissionsTable" class="table table-hover align-middle mb-0">
+                        <thead>
+                        <tr>
+                            <th style="width:5%">#</th>
+                            <th>Permission</th>
+                            <th>Codename</th>
+                            <th style="width:30%">Description</th>
+                            <th>Assigned Roles</th>
+                            <th style="width:12%">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for permission in permissions %}
+                        <tr>
+                            <td class="text-muted">{{ forloop.counter }}</td>
+                            <td>
+                                <div class="fw-semibold">{{ permission.name }}</div>
+                            </td>
+                            <td><code class="bg-light px-2 py-1 rounded">{{ permission.codename }}</code></td>
+                            <td>{{ permission.description|truncatechars:60 }}</td>
+                            <td>
+                                {% if permission.roles.count > 0 %}
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for role in permission.roles.all %}
+                                    <span class="badge bg-light text-dark small">{{ role.name }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <span class="badge bg-light text-muted">Unassigned</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'permission_detail' permission.pk %}" class="btn btn-outline-info" data-bs-toggle="tooltip" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if request.user|has_role:"Super Admin" or request.user|has_role:"Admin" %}
+                                    <a href="{% url 'permission_update' permission.pk %}" class="btn btn-outline-warning" data-bs-toggle="tooltip" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if request.user|has_role:"Super Admin" %}
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deletePermissionModal{{ permission.pk }}" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <div class="empty-state">
+                                    <i class="fas fa-key"></i>
+                                    <h5 class="mt-2">No permissions found</h5>
+                                    <p class="text-muted small">Try adjusting your search or create a new permission.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if permissions.paginator.num_pages > 1 %}
+                <nav aria-label="Permission pagination">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if permissions.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page=1&search={{ search_query|default:'' }}"><i class="fas fa-angle-double-left"></i></a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ permissions.previous_page_number }}&search={{ search_query|default:'' }}"><i class="fas fa-angle-left"></i></a></li>
+                        {% endif %}
+                        {% for num in permissions.paginator.page_range %}
+                        <li class="page-item {% if permissions.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}&search={{ search_query|default:'' }}">{{ num }}</a>
+                        </li>
+                        {% endfor %}
+                        {% if permissions.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ permissions.next_page_number }}&search={{ search_query|default:'' }}"><i class="fas fa-angle-right"></i></a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ permissions.paginator.num_pages }}&search={{ search_query|default:'' }}"><i class="fas fa-angle-double-right"></i></a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modals -->
+{% for permission in permissions %}
+<div class="modal fade" id="deletePermissionModal{{ permission.pk }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger bg-opacity-10">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Delete Permission</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete permission <strong>"{{ permission.name }}"</strong> (<code>{{ permission.codename }}</code>)?</p>
+                {% if permission.roles.count > 0 %}
+                <p class="text-warning small">Warning: This permission is assigned to {{ permission.roles.count }} role(s). Removing it may affect functionality.</p>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{% url 'permission_delete' permission.pk %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete Permission
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% block extra_js %}
+<script>
+$(function () {
+    $('[data-bs-toggle="tooltip"]').tooltip();
+});
+</script>
+{% endblock %}
+{% endblock %}

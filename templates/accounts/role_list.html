@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load accounts_tags %}
+{% block page_title %}Roles{% endblock %}
+{% block page_subtitle %}Manage roles and their permission assignments{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h5 class="card-title mb-0"><i class="fas fa-user-shield me-2 text-primary"></i>Role Management</h5>
+                    {% if request.user|has_role:"Super Admin" or request.user|has_role:"Admin" %}
+                    <a href="{% url 'role_create' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus me-2"></i>Add Role
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Search Bar -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <form method="get" class="d-flex">
+                            <div class="input-group input-group-sm">
+                                <input type="text" name="search" class="form-control" placeholder="Search roles..." value="{{ search_query|default:'' }}">
+                                <button class="btn btn-outline-light" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-md-4 offset-md-4 text-end">
+                        <span class="text-muted small">Showing {{ roles.paginator.count }} roles</span>
+                    </div>
+                </div>
+
+                <!-- Roles Table -->
+                <div class="table-responsive">
+                    <table id="rolesTable" class="table table-hover align-middle mb-0">
+                        <thead>
+                        <tr>
+                            <th style="width:5%">#</th>
+                            <th>Role Name</th>
+                            <th>Description</th>
+                            <th style="width:10%">Permissions</th>
+                            <th style="width:10%">Users</th>
+                            <th style="width:12%">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for role in roles %}
+                        <tr>
+                            <td class="text-muted">{{ forloop.counter }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm avatar-rounded bg-primary bg-opacity-10 text-primary me-2" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;">
+                                        {{ role.name|first|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold">{{ role.name }}</div>
+                                        <small class="text-muted">{{ role.created_at|date:"M d, Y" }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ role.description|truncatechars:50 }}</td>
+                            <td>
+                                {% if role.permissions.count > 0 %}
+                                <span class="badge bg-info-subtle text-info">{{ role.permissions.count }} perms</span>
+                                {% else %}
+                                <span class="badge bg-light text-muted">None</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if role.users.count > 0 %}
+                                <span class="badge bg-success-subtle text-success">{{ role.users.count }} users</span>
+                                {% else %}
+                                <span class="badge bg-light text-muted">None</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'role_detail' role.pk %}" class="btn btn-outline-info" data-bs-toggle="tooltip" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if request.user|has_role:"Super Admin" or request.user|has_role:"Admin" %}
+                                    <a href="{% url 'role_update' role.pk %}" class="btn btn-outline-warning" data-bs-toggle="tooltip" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if request.user|has_role:"Super Admin" %}
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteRoleModal{{ role.pk }}" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <div class="empty-state">
+                                    <i class="fas fa-user-shield"></i>
+                                    <h5 class="mt-2">No roles found</h5>
+                                    <p class="text-muted small">Try adjusting your search or create a new role.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if roles.paginator.num_pages > 1 %}
+                <nav aria-label="Role pagination">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if roles.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page=1&search={{ search_query|default:'' }}"><i class="fas fa-angle-double-left"></i></a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ roles.previous_page_number }}&search={{ search_query|default:'' }}"><i class="fas fa-angle-left"></i></a></li>
+                        {% endif %}
+                        {% for num in roles.paginator.page_range %}
+                        <li class="page-item {% if roles.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}&search={{ search_query|default:'' }}">{{ num }}</a>
+                        </li>
+                        {% endfor %}
+                        {% if roles.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ roles.next_page_number }}&search={{ search_query|default:'' }}"><i class="fas fa-angle-right"></i></a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ roles.paginator.num_pages }}&search={{ search_query|default:'' }}"><i class="fas fa-angle-double-right"></i></a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modals -->
+{% for role in roles %}
+<div class="modal fade" id="deleteRoleModal{{ role.pk }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger bg-opacity-10">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Delete Role</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>"{{ role.name }}"</strong>?</p>
+                {% if role.users.count > 0 or role.permissions.count > 0 %}
+                <p class="text-warning small">Warning: This role has {{ role.users.count }} user(s) and {{ role.permissions.count }} permission(s) assigned.</p>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{% url 'role_delete' role.pk %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete Role
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% block extra_js %}
+<script>
+$(function () {
+    $('[data-bs-toggle="tooltip"]').tooltip();
+});
+</script>
+{% endblock %}
+{% endblock %}

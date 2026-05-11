@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load accounts_tags %}
+{% block page_title %}Delete Role{% endblock %}
+{% block page_subtitle %}Remove role "{{ object.name }}" from the system{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm animate-in">
+            <div class="card-header bg-danger bg-opacity-10 border-0">
+                <h5 class="card-title mb-0 text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Delete Role</h5>
+            </div>
+            <div class="card-body text-center p-5">
+                <div class="mb-4">
+                    <div class="avatar-xl avatar-rounded bg-danger bg-opacity-10 text-danger mx-auto d-flex align-items-center justify-content-center" style="width:100px;height:100px;font-size:3rem;">
+                        <i class="fas fa-user-shield-slash"></i>
+                    </div>
+                </div>
+                <h4 class="text-danger">Are you sure?</h4>
+                <p class="text-muted fs-5">You are about to permanently delete role <strong>"{{ object.name }}"</strong>.</p>
+                <div class="row g-2 mt-3">
+                    <div class="col-6">
+                        <div class="bg-light rounded p-3 text-center">
+                            <div class="text-muted small">Permissions</div>
+                            <div class="fw-bold h4 mb-0">{{ object.permissions.count }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="bg-light rounded p-3 text-center">
+                            <div class="text-muted small">Assigned Users</div>
+                            <div class="fw-bold h4 mb-0">{{ object.users.count }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% if object.users.count > 0 or object.permissions.count > 0 %}
+                <p class="text-warning small mt-3"><i class="fas fa-exclamation-triangle me-1"></i>Warning: This role currently has users and/or permissions assigned. Removing it may affect their functionality.</p>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-transparent d-flex justify-content-end gap-2">
+                <a href="{% url 'role_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </a>
+                <form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete Role
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

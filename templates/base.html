@@ -1,106 +1,216 @@
+{% load static accounts_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}QI Manager{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #4e73df;
-            --secondary-color: #858796;
-        }
-        body { background-color: #f8f9fa; }
-        .navbar-brand { font-weight: 700; }
-        .sidebar {
-            position: fixed; top: 70px; left: 0;
-            height: calc(100vh - 70px); width: 250px;
-            background: #fff;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-            overflow-y: auto;
-        }
-        .sidebar-link {
-            color: #858796; padding: 0.75rem 1rem;
-            display: block; transition: all 0.2s;
-        }
-        .sidebar-link:hover, .sidebar-link.active {
-            color: var(--primary-color);
-            background-color: #f8f9fc;
-        }
-        .main-content {
-            margin-left: 250px; margin-top: 70px; padding: 1.5rem;
-        }
-        .card { border: none; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1); }
-        .btn-primary { background-color: var(--primary-color); border-color: var(--primary-color); }
-    </style>
+    <!-- Preload -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <!-- DataTables -->
+    <link href="https://cdn.datatables.net/2.0.1/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/buttons/3.0.0/css/buttons.bootstrap5.min.css" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'index' %}"><i class="bi bi-graph-up"></i> QI Manager</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    {% if user.is_authenticated %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle"></i> {{ user.email|default:user.username }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person"></i> Profile</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-                        </ul>
-                    </li>
-                    {% else %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'login' %}"><i class="bi bi-box-arrow-in-right"></i> Login</a></li>
-                    {% endif %}
-                </ul>
+    <div class="page-wrapper">
+        <!-- ========== Sidebar ========== -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="{% url 'home' %}" class="sidebar-brand">
+                    <div class="brand-icon">
+                        <i class="fas fa-cubes"></i>
+                    </div>
+                    <span class="brand-text">QI <span class="brand-accent">Manager</span></span>
+                </a>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
             </div>
-        </div>
-    </nav>
+            <div class="sidebar-body" data-simplebar="init">
+                <nav class="nav flex-column">
+                    <span class="nav-section-title">Main</span>
+                    <a href="{% url 'home' %}" class="nav-link {% if request.path == '/' or request.path == '/home/' %}active{% endif %}">
+                        <i class="nav-icon fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
 
-    {% if user.is_authenticated %}
-    <nav class="sidebar">
-        <div class="position-sticky">
-            <ul class="nav flex-column">
-                <li class="nav-item"><a class="sidebar-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}"><i class="bi bi-house-door me-2"></i> Dashboard</a></li>
-                <li class="nav-item"><a class="sidebar-link" href="#"><i class="bi bi-file-text me-2"></i> Quotations</a></li>
-                <li class="nav-item"><a class="sidebar-link" href="#"><i class="bi bi-receipt me-2"></i> Invoices</a></li>
-                <li class="nav-item"><a class="sidebar-link" href="#"><i class="bi bi-people me-2"></i> Clients</a></li>
-                <li class="nav-item"><a class="sidebar-link" href="#"><i class="bi bi-gear me-2"></i> Settings</a></li>
-            </ul>
-        </div>
-    </nav>
-    {% endif %}
+                    <span class="nav-section-title">RBAC Management</span>
+                    {% if request.user.is_superuser or request.user|has_role:"Super Admin" or request.user|has_role:"Admin" %}
+                    <a href="{% url 'user_list' %}" class="nav-link {% if 'users' in request.path and 'permission' not in request.path and 'role' not in request.path %}active{% endif %}">
+                        <i class="nav-icon fas fa-users"></i>
+                        <span>Users</span>
+                        {% with count=user_count %}{% if count %}<span class="nav-badge">{{ count }}</span>{% endif %}{% endwith %}
+                    </a>
+                    <a href="{% url 'role_list' %}" class="nav-link {% if 'roles' in request.path %}active{% endif %}">
+                        <i class="nav-icon fas fa-user-shield"></i>
+                        <span>Roles</span>
+                        {% with count=role_count %}{% if count %}<span class="nav-badge">{{ count }}</span>{% endif %}{% endwith %}
+                    </a>
+                    {% if request.user.is_superuser or request.user|has_permission:"accounts.view_permission" %}
+                    <a href="{% url 'permission_list' %}" class="nav-link {% if 'permissions' in request.path %}active{% endif %}">
+                        <i class="nav-icon fas fa-lock"></i>
+                        <span>Permissions</span>
+                        {% with count=permission_count %}{% if count %}<span class="nav-badge">{{ count }}</span>{% endif %}{% endwith %}
+                    </a>
+                    {% endif %}
+                    {% endif %}
 
-    <main class="{% if user.is_authenticated %}main-content{% else %}container{% endif %}">
-        {% if messages %}
-        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1050;">
-            {% for message in messages %}
-            <div class="toast show align-items-center text-bg-{{ message.tags }} border-0" role="alert">
-                <div class="d-flex">
-                    <div class="toast-body">{{ message }}</div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    <span class="nav-section-title">Account</span>
+                    <a href="{% url 'profile' %}" class="nav-link {% if 'profile' in request.path %}active{% endif %}">
+                        <i class="nav-icon fas fa-user-gear"></i>
+                        <span>My Profile</span>
+                    </a>
+                    <a href="{% url 'logout' %}" class="nav-link text-danger">
+                        <i class="nav-icon fas fa-sign-out-alt"></i>
+                        <span>Sign Out</span>
+                    </a>
+                </nav>
+            </div>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="sidebar-user-info">
+                        <span class="sidebar-user-name">{{ request.user.get_full_name|default:request.user.username }}</span>
+                        <span class="sidebar-user-role">{{ request.user.roles.first.name|default:'Member' }}</span>
+                    </div>
                 </div>
             </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-        {% block content %}{% endblock %}
-    </main>
+        </aside>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var toastElList = [].slice.call(document.querySelectorAll('.toast'))
-            toastElList.forEach(function(toastEl) { new bootstrap.Toast(toastEl, { delay: 5000 }).show(); })
-        });
-    </script>
+        <!-- ========== Main Content ========== -->
+        <main class="main-content" id="mainContent">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h2 class="topbar-title">{% block page_title %}Dashboard{% endblock %}</h2>
+                    <p class="topbar-subtitle">{% block page_subtitle %}Welcome back, {{ request.user.first_name|default:request.user.username }}!{% endblock %}</p>
+                </div>
+                <div class="topbar-right">
+                    <form class="topbar-search" method="GET" action="">
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control form-control-sm" placeholder="Search anything...">
+                            <button class="btn btn-outline-light btn-sm" type="button">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <ul class="topbar-actions">
+                        <li class="dropdown">
+                            <a href="#" class="topbar-btn" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-bell"></i>
+                                <span class="topbar-badge"></span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end notification-dropdown">
+                                <li class="dropdown-header">
+                                    <h6 class="mb-0">Notifications</h6>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="#">
+                                        <div class="d-flex align-items-center">
+                                            <div class="notification-icon bg-primary"><i class="fas fa-user-plus"></i></div>
+                                            <div class="flex-grow-1 ms-2">
+                                                <p class="mb-0 text-dark">New user registered</p>
+                                                <small class="text-muted">Just now</small>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li class="dropdown-footer text-center">
+                                    <a href="#" class="text-decoration-none small">View all notifications</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="dropdown ms-2">
+                            <a href="#" class="topbar-btn topbar-avatar" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="avatar">
+                                    {{ request.user.username|make_list|first|upper }}
+                                </span>
+                                <span class="d-none d-md-inline ms-2">{{ request.user.username }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end user-dropdown">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'profile' %}">
+                                        <i class="fas fa-user me-2"></i>Profile
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Sign Out
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <form id="logoutForm" action="{% url 'logout' %}" method="post" class="d-none">
+                        {% csrf_token %}
+                    </form>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="content-wrapper">
+                <div class="container-fluid">
+                    {% if messages %}
+                    <div class="messages-container">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="footer">
+                <div class="container-fluid">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">© {{ now|date:"Y" }} QI Manager. All rights reserved.</span>
+                        <span class="text-muted small">Version 1.0.0</span>
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Scroll to Top -->
+    <a href="#" class="scroll-top" id="scrollTop">
+        <i class="fas fa-chevron-up"></i>
+    </a>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <script src="https://cdn.datatables.net/2.0.1/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/2.0.1/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.0/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.0/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simplebar@6.0.0/dist/simplebar.min.js"></script>
     {% block extra_js %}{% endblock %}
+    <script src="{% static 'js/script.js' %}"></script>
 </body>
 </html>

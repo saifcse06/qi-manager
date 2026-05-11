@@ -1,61 +1,211 @@
 {% extends 'base.html' %}
-{% block title %}Dashboard - QI Manager{% endblock %}
+{% load accounts_tags %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Welcome back, {{ request.user.first_name|default:request.user.username }}! Here's what's happening today.{% endblock %}
 {% block content %}
-<div class="container-fluid">
-    <h1 class="mb-4">Dashboard</h1>
-    <div class="row">
-        <div class="col-md-3 mb-4">
-            <div class="card text-white bg-primary">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h5 class="card-title">Total Quotations</h5>
-                            <h2 class="mb-0">0</h2>
-                        </div>
-                        <i class="bi bi-file-text" style="font-size: 2.5rem;"></i>
-                    </div>
+<!-- Welcome Card -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="welcome-card">
+            <h2>Hello, {{ request.user.first_name|default:request.user.username }} 👋</h2>
+            <p class="mb-0">You have <strong>{{ user_count }}</strong> users, <strong>{{ role_count }}</strong> roles, and <strong>{{ permission_count }}</strong> permissions configured.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card blue animate-in">
+            <div class="stat-card-body">
+                <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ total_users }}</div>
+                    <div class="stat-label">Total Users</div>
+                    <span class="stat-change up"><i class="fas fa-arrow-up"></i> {{ active_users}} active</span>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-4">
-            <div class="card text-white bg-success">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h5 class="card-title">Total Invoices</h5>
-                            <h2 class="mb-0">0</h2>
-                        </div>
-                        <i class="bi bi-receipt" style="font-size: 2.5rem;"></i>
-                    </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card green animate-in" style="animation-delay: 0.1s;">
+            <div class="stat-card-body">
+                <div class="stat-icon green"><i class="fas fa-user-shield"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ total_roles }}</div>
+                    <div class="stat-label">Total Roles</div>
+                    <span class="stat-change up"><i class="fas fa-check"></i> configured</span>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-4">
-            <div class="card text-white bg-warning">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h5 class="card-title">Pending</h5>
-                            <h2 class="mb-0">0</h2>
-                        </div>
-                        <i class="bi bi-clock" style="font-size: 2.5rem;"></i>
-                    </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card orange animate-in" style="animation-delay: 0.2s;">
+            <div class="stat-card-body">
+                <div class="stat-icon orange"><i class="fas fa-key"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ total_permissions }}</div>
+                    <div class="stat-label">Permissions</div>
+                    <span class="stat-change up"><i class="fas fa-check"></i> assigned</span>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-4">
-            <div class="card text-white bg-info">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h5 class="card-title">Clients</h5>
-                            <h2 class="mb-0">0</h2>
-                        </div>
-                        <i class="bi bi-people" style="font-size: 2.5rem;"></i>
-                    </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card purple animate-in" style="animation-delay: 0.3s;">
+            <div class="stat-card-body">
+                <div class="stat-icon purple"><i class="fas fa-user-check"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ active_users }}</div>
+                    <div class="stat-label">Active Users</div>
+                    <span class="stat-change up"><i class="fas fa-arrow-up"></i> online</span>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Quick Actions -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm animate-in" style="animation-delay: 0.15s;">
+            <div class="card-body text-center p-4">
+                <div class="mb-3">
+                    <div class="btn-icon btn-icon-lg bg-primary bg-opacity-10 text-primary mb-3 mx-auto rounded-circle d-flex align-items-center justify-content-center" style="width:60px;height:60px;">
+                        <i class="fas fa-user-plus fa-lg" style="font-size:1.5rem;"></i>
+                    </div>
+                </div>
+                <h5 class="card-title">Add New User</h5>
+                <p class="text-muted small mb-3">Create a new user and assign roles</p>
+                <a href="{% url 'user_create' %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-2"></i>Create User
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm animate-in" style="animation-delay: 0.25s;">
+            <div class="card-body text-center p-4">
+                <div class="mb-3">
+                    <div class="btn-icon btn-icon-lg bg-success bg-opacity-10 text-success mb-3 mx-auto rounded-circle d-flex align-items-center justify-content-center" style="width:60px;height:60px;">
+                        <i class="fas fa-user-tag fa-lg" style="font-size:1.5rem;"></i>
+                    </div>
+                </div>
+                <h5 class="card-title">Manage Roles</h5>
+                <p class="text-muted small mb-3">Create and manage user roles</p>
+                <a href="{% url 'role_list' %}" class="btn btn-success btn-sm">
+                    <i class="fas fa-list me-2"></i>View Roles
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm animate-in" style="animation-delay: 0.35s;">
+            <div class="card-body text-center p-4">
+                <div class="mb-3">
+                    <div class="btn-icon btn-icon-lg bg-info bg-opacity-10 text-info mb-3 mx-auto rounded-circle d-flex align-items-center justify-content-center" style="width:60px;height:60px;">
+                        <i class="fas fa-lock fa-lg" style="font-size:1.5rem;"></i>
+                    </div>
+                </div>
+                <h5 class="card-title">Permissions</h5>
+                <p class="text-muted small mb-3">Configure granular permissions</p>
+                <a href="{% url 'permission_list' %}" class="btn btn-info btn-sm">
+                    <i class="fas fa-list me-2"></i>View Permissions
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-lg-7 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent">
+                <h5 class="card-title mb-0"><i class="fas fa-clock me-2 text-primary"></i>Recent Activity</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="activity-item">
+                    <div class="activity-icon create"><i class="fas fa-user-plus"></i></div>
+                    <div class="activity-text">
+                        <p><strong>New user created:</strong> testuser</p>
+                        <small class="text-muted">2 minutes ago</small>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon update"><i class="fas fa-user-tag"></i></div>
+                    <div class="activity-text">
+                        <p><strong>Role updated:</strong> Admin permissions modified</p>
+                        <small class="text-muted">15 minutes ago</small>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon login"><i class="fas fa-sign-in-alt"></i></div>
+                    <div class="activity-text">
+                        <p><strong>Login:</strong> admin logged in successfully</p>
+                        <small class="text-muted">1 hour ago</small>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon create"><i class="fas fa-key"></i></div>
+                    <div class="activity-text">
+                        <p><strong>Permission created:</strong> accounts.view_dashboard</p>
+                        <small class="text-muted">2 hours ago</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent">
+                <h5 class="card-title mb-0"><i class="fas fa-chart-pie me-2 text-primary"></i>Role Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="roleChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+$(function () {
+    // Role Distribution Chart
+    var roleCtx = document.getElementById('roleChart').getContext('2d');
+    new Chart(roleCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Super Admin', 'Admin', 'Manager', 'Others'],
+            datasets: [{
+                data: [1, 1, 1, 3],
+                backgroundColor: [
+                    '#2c6fbb',
+                    '#3498db',
+                    '#2ecc71',
+                    '#95a5a6'
+                ],
+                borderWidth: 2,
+                borderColor: '#fff',
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 16,
+                        usePointStyle: true,
+                        pointStyleWidth: 10,
+                        font: { size: 12, family: 'Inter' }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
 {% endblock %}

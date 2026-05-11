@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load accounts_tags %}
+{% block page_title %}Delete Permission{% endblock %}
+{% block page_subtitle %}Remove permission "{{ object.name }}" from the system{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm animate-in">
+            <div class="card-header bg-danger bg-opacity-10 border-0">
+                <h5 class="card-title mb-0 text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Delete Permission</h5>
+            </div>
+            <div class="card-body text-center p-5">
+                <div class="mb-4">
+                    <div class="avatar-xl avatar-rounded bg-danger bg-opacity-10 text-danger mx-auto d-flex align-items-center justify-content-center" style="width:100px;height:100px;font-size:3rem;">
+                        <i class="fas fa-key-slash"></i>
+                    </div>
+                </div>
+                <h4 class="text-danger">Are you sure?</h4>
+                <p class="text-muted fs-5">You are about to permanently delete permission <strong>"{{ object.name }}"</strong> (<code>{{ object.codename }}</code>).</p>
+                {% if object.roles.count > 0 %}
+                <p class="text-warning small mt-3"><i class="fas fa-exclamation-triangle me-1"></i>Warning: This permission is assigned to {{ object.roles.count }} role(s). Removing it may affect their functionality.</p>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-transparent d-flex justify-content-end gap-2">
+                <a href="{% url 'permission_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </a>
+                <form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete Permission
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

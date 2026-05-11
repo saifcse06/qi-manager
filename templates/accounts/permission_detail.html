@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load accounts_tags %}
+{% block page_title %}Permission Detail{% endblock %}
+{% block page_subtitle %}View details for permission "{{ object.name }}"{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="fas fa-key me-2 text-primary"></i>Permission Detail</h5>
+                <div>
+                    <a href="{% url 'permission_list' %}" class="btn btn-outline-secondary btn-sm me-2">
+                        <i class="fas fa-arrow-left me-1"></i>Back
+                    </a>
+                    {% if request.user|has_role:"Super Admin" or request.user|has_role:"Admin" %}
+                    <a href="{% url 'permission_update' object.pk %}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="avatar-lg avatar-rounded bg-info bg-opacity-10 text-info mx-auto d-flex align-items-center justify-content-center mb-2" style="width:80px;height:80px;font-size:2rem;">
+                            <i class="fas fa-key"></i>
+                        </div>
+                        <h4>{{ object.name }}</h4>
+                        <span class="badge bg-light text-dark">{{ object.codename }}</span>
+                    </div>
+                    <div class="col-md-8">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="text-muted" style="width:140px;">Description</td>
+                                <td>{{ object.description|default:"<span class='text-muted'>No description</span>" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Created</td>
+                                <td>{{ object.created_at|date:"M d, Y H:i" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <hr>
+                <h6 class="mb-2"><i class="fas fa-user-shield me-2 text-muted"></i>Assigned Roles ({{ object.roles.count }})</h6>
+                {% if object.roles.all %}
+                <div class="d-flex flex-wrap gap-2">
+                    {% for role in object.roles.all %}
+                    <span class="badge bg-info-subtle text-info">
+                        <i class="fas fa-user-shield me-1"></i>{{ role.name }}
+                    </span>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No roles assigned to this permission.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
