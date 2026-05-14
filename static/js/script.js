@@ -76,7 +76,9 @@
            TOPBAR
            ================================ */
         _initTopbar: function () {
-            // Dropdown toggle
+            var self = this;
+
+            // Click outside dropdowns to close
             $(document).on('click', function (e) {
                 var target = $(e.target);
                 if (!target.closest('.dropdown').length) {
@@ -84,12 +86,21 @@
                 }
             });
 
+            // Manual dropdown toggle (avoids conflict with Bootstrap data-bs-toggle)
             $('.dropdown > a').on('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 var menu = $(this).siblings('.dropdown-menu');
                 $('.dropdown-menu').not(menu).removeClass('show');
                 menu.toggleClass('show');
+            });
+
+            // Notification mark as read toggle
+            $(document).on('click', '.notification-dropdown .dropdown-item', function () {
+                var $item = $(this);
+                if (!$item.hasClass('dropdown-header') && !$item.closest('.dropdown-footer').length) {
+                    $item.find('.notification-icon').removeClass('bg-primary').addClass('bg-green');
+                }
             });
         },
 

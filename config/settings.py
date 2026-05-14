@@ -31,6 +31,9 @@ INSTALLED_APPS = [
 
     # Our custom accounts app (RBAC)
     'accounts',
+
+    # System Settings App
+    'settings_app',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
@@ -97,6 +100,10 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SITE_ID = 1
 
+# Media files (for settings app logos, signatures, etc.)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # Authentication backends - both standard Django and allauth
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
@@ -139,6 +146,7 @@ MIDDLEWARE_ROLE_MAP = {
     r'^/users/': ['Super Admin', 'Admin'],
     r'^/roles/': ['Super Admin', 'Admin'],
     r'^/permissions/': ['Super Admin'],
+    r'^/settings/': ['Super Admin'],
 }
 
 MIDDLEWARE_EXEMPT_URLS = [

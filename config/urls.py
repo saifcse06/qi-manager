@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
 from django.contrib.auth import views as auth_views
+from django.conf import settings
+from django.conf.urls.static import static
 from accounts.views import (
     index_view, HomeView, ProfileView,
     UserListView, UserCreateView, UserUpdateView, UserDeleteView, UserDetailView,
@@ -40,6 +42,9 @@ urlpatterns = [
     path('ajax/load-roles/', LoadRolesView.as_view(), name='ajax_load_roles'),
     path('ajax/load-permissions/', LoadPermissionsView.as_view(), name='ajax_load_permissions'),
 
+    # System Settings URLs
+    path('settings/', include('settings_app.urls', namespace='settings_app')),
+
     # Authentication URLs
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
@@ -49,3 +54,7 @@ urlpatterns = [
     path('home/', HomeView.as_view(), name='home'),
     path('profile/', ProfileView.as_view(), name='profile'),
 ]
+
+# Serve media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

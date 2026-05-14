@@ -1,0 +1,838 @@
+{% extends 'base.html' %}
+{% load static accounts_tags %}
+{% block title %}System Settings - QI Manager{% endblock %}
+{% block page_title %}System Settings{% endblock %}
+{% block page_subtitle %}Manage company, email, quotation, invoice, and payment configurations{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Settings Navigation Tabs -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-0">
+                <nav class="nav nav-tabs settings-tabs" id="settingsTabs" role="tablist">
+                    <a class="nav-link {% if active_tab == 'company' %}active{% endif %}" href="?tab=company" role="tab">
+                        <i class="fas fa-building me-1"></i> Company
+                    </a>
+                    <a class="nav-link {% if active_tab == 'email' %}active{% endif %}" href="?tab=email" role="tab">
+                        <i class="fas fa-envelope me-1"></i> Email
+                    </a>
+                    <a class="nav-link {% if active_tab == 'templates' %}active{% endif %}" href="?tab=templates" role="tab">
+                        <i class="fas fa-file-alt me-1"></i> Templates
+                    </a>
+                    <a class="nav-link {% if active_tab == 'quotation' %}active{% endif %}" href="?tab=quotation" role="tab">
+                        <i class="fas fa-file-invoice-dollar me-1"></i> Quotation
+                    </a>
+                    <a class="nav-link {% if active_tab == 'invoice' %}active{% endif %}" href="?tab=invoice" role="tab">
+                        <i class="fas fa-file-invoice me-1"></i> Invoice
+                    </a>
+                    <a class="nav-link {% if active_tab == 'payment-method' %}active{% endif %}" href="?tab=payment-method" role="tab">
+                        <i class="fas fa-credit-card me-1"></i> Payment
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="card border-0 shadow-sm">
+            <!-- Company Settings Tab -->
+            <div class="tab-content p-4" id="companyTab" style="display: {% if active_tab == 'company' %}block{% else %}none{% endif %};">
+                <h5 class="mb-3"><i class="fas fa-building text-primary me-2"></i>Company Settings</h5>
+                <p class="text-muted small mb-4">Manage your company information, branding, and regional settings.</p>
+                <form method="post" enctype="multipart/form-data" id="companyForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="active_tab" value="company">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Company Name <span class="text-danger">*</span></label>
+                            {{ company_settings_form.company_name }}
+                            {% if company_settings_form.company_name.errors %}
+                                <div class="text-danger small mt-1">{{ company_settings_form.company_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Company Logo</label>
+                            {{ company_settings_form.company_logo }}
+                            {% if company_settings_form.company_logo.errors %}
+                                <div class="text-danger small mt-1">{{ company_settings_form.company_logo.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Address</label>
+                            {{ company_settings_form.address }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Contact Number</label>
+                            {{ company_settings_form.contact_number }}
+                            {% if company_settings_form.contact_number.errors %}
+                                <div class="text-danger small mt-1">{{ company_settings_form.contact_number.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            {{ company_settings_form.email }}
+                            {% if company_settings_form.email.errors %}
+                                <div class="text-danger small mt-1">{{ company_settings_form.email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Website</label>
+                            {{ company_settings_form.website }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Currency</label>
+                            {{ company_settings_form.currency }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Currency Symbol</label>
+                            {{ company_settings_form.currency_symbol }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Timezone</label>
+                            {{ company_settings_form.timezone }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Date Format</label>
+                            {{ company_settings_form.date_format }}
+                        </div>
+                    </div>
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Company Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Email Configuration Tab -->
+            <div class="tab-content p-4" id="emailTab" style="display: {% if active_tab == 'email' %}block{% else %}none{% endif %};">
+                <h5 class="mb-3"><i class="fas fa-envelope text-primary me-2"></i>Email Configuration</h5>
+                <p class="text-muted small mb-4">Configure SMTP settings for outgoing emails.</p>
+                <form method="post" id="emailForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="active_tab" value="email">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">SMTP Host <span class="text-danger">*</span></label>
+                            {{ email_config_form.smtp_host }}
+                            {% if email_config_form.smtp_host.errors %}
+                                <div class="text-danger small mt-1">{{ email_config_form.smtp_host.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">SMTP Port <span class="text-danger">*</span></label>
+                            {{ email_config_form.smtp_port }}
+                            {% if email_config_form.smtp_port.errors %}
+                                <div class="text-danger small mt-1">{{ email_config_form.smtp_port.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Encryption Type</label>
+                            {{ email_config_form.encryption_type }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">SMTP Username <span class="text-danger">*</span></label>
+                            {{ email_config_form.smtp_username }}
+                            {% if email_config_form.smtp_username.errors %}
+                                <div class="text-danger small mt-1">{{ email_config_form.smtp_username.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">SMTP Password</label>
+                            {{ email_config_form.smtp_password }}
+                            {% if email_config_form.smtp_password.errors %}
+                                <div class="text-danger small mt-1">{{ email_config_form.smtp_password.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Sender Name</label>
+                            {{ email_config_form.default_sender_name }}
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch mt-2">
+                                {{ email_config_form.use_tls }}
+                                <label class="form-check-label" for="id_use_tls">
+                                    <i class="fas fa-circle me-1 {% if email_config_form.use_tls.value %}text-success{% else %}text-muted{% endif %}"></i>
+                                    Use TLS (Transport Layer Security)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Email Configuration
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="testEmailConnection()">
+                            <i class="fas fa-vial me-2"></i>Test Connection
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Email Templates Tab -->
+            <div class="tab-content p-4" id="templatesTab" style="display: {% if active_tab == 'templates' %}block{% else %}none{% endif %};">
+                <h5 class="mb-3"><i class="fas fa-file-alt text-primary me-2"></i>Email Templates</h5>
+                <p class="text-muted small mb-4">Create and manage email templates for various system notifications.</p>
+
+                <!-- Create New Template Form -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-transparent border-bottom">
+                        <h6 class="mb-0"><i class="fas fa-plus-circle text-success me-2"></i>Create / Edit Email Template</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="post" id="templateForm">
+                            {% csrf_token %}
+                            <input type="hidden" name="active_tab" value="templates">
+                            <input type="hidden" name="template_id" id="template_id" value="">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Template Type <span class="text-danger">*</span></label>
+                                    {{ email_template_form.template_type }}
+                                    {% if email_template_form.template_type.errors %}
+                                        <div class="text-danger small mt-1">{{ email_template_form.template_type.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label">Subject <span class="text-danger">*</span></label>
+                                    {{ email_template_form.subject }}
+                                    {% if email_template_form.subject.errors %}
+                                        <div class="text-danger small mt-1">{{ email_template_form.subject.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Email Body <span class="text-danger">*</span></label>
+                                    {{ email_template_form.body }}
+                                    {% if email_template_form.body.errors %}
+                                        <div class="text-danger small mt-1">{{ email_template_form.body.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-12">
+                                    <small class="text-muted">
+                                        <strong>Available Variables:</strong>
+                                        <code>{{ client_name }}</code>, <code>{{ invoice_number }}</code>,
+                                        <code>{{ quotation_number }}</code>, <code>{{ due_amount }}</code>,
+                                        <code>{{ company_name }}</code>, <code>{{ signature }}</code>,
+                                        <code>{{ due_date }}</code>, <code>{{ amount }}</code>
+                                    </small>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-text">
+                                        <strong>Template Variables JSON:</strong> Define custom variables for this template.
+                                    </div>
+                                    {{ email_template_form.template_variables }}
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check form-switch mt-2">
+                                        {{ email_template_form.is_active }}
+                                        <label class="form-check-label" for="id_is_active">
+                                            Active
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3 d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Save Template
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="resetTemplateForm()">
+                                    <i class="fas fa-undo me-2"></i>Reset
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Existing Templates List -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom">
+                        <h6 class="mb-0"><i class="fas fa-list me-2"></i>Existing Templates</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="templatesTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Subject</th>
+                                        <th>Status</th>
+                                        <th>Updated</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for template in email_templates %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-primary">{{ template.get_template_type_display }}</span>
+                                        </td>
+                                        <td>{{ template.subject }}</td>
+                                        <td>
+                                            {% if template.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ template.updated_at|date:"Y-m-d H:i" }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary edit-template-btn"
+                                                    data-type="{{ template.template_type }}"
+                                                    data-subject="{{ template.subject }}"
+                                                    data-body="{{ template.body|escape }}"
+                                                    data-active="{{ template.is_active|yesno:'true,false' }}"
+                                                    data-id="{{ template.id }}">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            No email templates created yet. Use the form above to create one.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quotation Configuration Tab -->
+            <div class="tab-content p-4" id="quotationTab" style="display: {% if active_tab == 'quotation' %}block{% else %}none{% endif %};">
+                <h5 class="mb-3"><i class="fas fa-file-invoice-dollar text-primary me-2"></i>Quotation Configuration</h5>
+                <p class="text-muted small mb-4">Configure quotation number format, footers, terms, and tax settings.</p>
+                <form method="post" enctype="multipart/form-data" id="quotationForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="active_tab" value="quotation">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Quotation Number Format <span class="text-danger">*</span></label>
+                            {{ quotation_config_form.number_format }}
+                            {% if quotation_config_form.number_format.errors %}
+                                <div class="text-danger small mt-1">{{ quotation_config_form.number_format.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">
+                                Use placeholders: <code>{YYYY}</code> = Year, <code>{MM}</code> = Month, <code>{DD}</code> = Day, <code>{序号}</code> = Sequential Number
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <h6 class="mb-3"><i class="fas fa-align-left me-2"></i>Footer Content</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Footer Left Content</label>
+                            {{ quotation_config_form.footer_left_content }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Footer Right Content</label>
+                            {{ quotation_config_form.footer_right_content }}
+                        </div>
+                    </div>
+                    <hr>
+                    <h6 class="mb-3"><i class="fas fa-file-contract me-2"></i>Terms & Conditions</h6>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Terms and Conditions</label>
+                            {{ quotation_config_form.terms_and_conditions }}
+                            {% if quotation_config_form.terms_and_conditions.errors %}
+                                <div class="text-danger small mt-1">{{ quotation_config_form.terms_and_conditions.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Default Warranty Text</label>
+                            {{ quotation_config_form.default_warranty }}
+                        </div>
+                    </div>
+                    <hr>
+                    <h6 class="mb-3"><i class="fas fa-percentage me-2"></i>Tax Settings</h6>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Tax Name</label>
+                            {{ quotation_config_form.tax_name }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Tax Rate (%)</label>
+                            {{ quotation_config_form.tax_rate }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Include Tax in Total</label>
+                            <div class="form-check form-switch mt-2">
+                                {{ quotation_config_form.include_tax_in_total }}
+                                <label class="form-check-label" for="id_include_tax_in_total">
+                                    Include tax in total amount calculation
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Quotation Configuration
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Invoice Configuration Tab -->
+            <div class="tab-content p-4" id="invoiceTab" style="display: {% if active_tab == 'invoice' %}block{% else %}none{% endif %};">
+                <h5 class="mb-3"><i class="fas fa-file-invoice text-primary me-2"></i>Invoice Configuration</h5>
+                <p class="text-muted small mb-4">Configure invoice number format, branding, footer, and payment instructions.</p>
+                <form method="post" enctype="multipart/form-data" id="invoiceForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="active_tab" value="invoice">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Invoice Number Format <span class="text-danger">*</span></label>
+                            {{ invoice_config_form.number_format }}
+                            {% if invoice_config_form.number_format.errors %}
+                                <div class="text-danger small mt-1">{{ invoice_config_form.number_format.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">
+                                Same placeholders as quotation. Example: <code>INV-{YYYY}-{序号}</code>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Due Days</label>
+                            {{ invoice_config_form.due_days }}
+                        </div>
+                    </div>
+                    <hr>
+                    <h6 class="mb-3"><i class="fas fa-image me-2"></i>Branding</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Seal Upload</label>
+                            {{ invoice_config_form.seal_upload }}
+                            <div class="form-text">Upload company seal/logo (PNG, JPG, SVG - max 2MB)</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Signature Upload</label>
+                            {{ invoice_config_form.signature_upload }}
+                            <div class="form-text">Upload authorized signature image</div>
+                        </div>
+                    </div>
+                    <hr>
+                    <h6 class="mb-3"><i class="fas fa-align-left me-2"></i>Invoice Footer</h6>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Footer Text</label>
+                            {{ invoice_config_form.footer_text }}
+                        </div>
+                    </div>
+                    <hr>
+                    <h6 class="mb-3"><i class="fas fa-money-check-alt me-2"></i>Payment Instructions</h6>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Payment Instructions</label>
+                            {{ invoice_config_form.payment_instructions }}
+                            <div class="form-text">Instructions shown to clients on how to make payment. Leave empty for default instructions.</div>
+                        </div>
+                    </div>
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Invoice Configuration
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Payment Configuration Tab -->
+            <div class="tab-content p-4" id="paymentTab" style="display: {% if active_tab == 'payment-method' %}block{% else %}none{% endif %};">
+                <h5 class="mb-3"><i class="fas fa-credit-card text-primary me-2"></i>Payment Configuration</h5>
+                <p class="text-muted small mb-4">Manage payment methods and payment terms.</p>
+
+                <!-- Payment Methods Section -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-transparent border-bottom">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h6 class="mb-0"><i class="fas fa-credit-card me-2"></i>Payment Methods</h6>
+                            <button class="btn btn-sm btn-outline-primary" onclick="togglePaymentMethodForm()">
+                                <i class="fas fa-plus me-1"></i>Add New
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <!-- Add/Edit Payment Method Form -->
+                        <div id="paymentMethodFormContainer" class="d-none" style="background: #f8f9fc; padding: 20px; border-bottom: 1px solid #e8ecf1;">
+                            <form method="post" id="paymentMethodForm">
+                                {% csrf_token %}
+                                <input type="hidden" name="active_tab" value="payment-method">
+                                <input type="hidden" name="method_id" id="method_id" value="">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Name <span class="text-danger">*</span></label>
+                                        {{ payment_method_form.name }}
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Payment Type</label>
+                                        {{ payment_method_form.payment_type }}
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Sort Order</label>
+                                        {{ payment_method_form.sort_order }}
+                                    </div>
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-sm btn-primary me-2">
+                                            <i class="fas fa-save me-1"></i>Save
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="togglePaymentMethodForm()">
+                                            <i class="fas fa-times me-1"></i>Cancel
+                                        </button>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Description</label>
+                                        {{ payment_method_form.description }}
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check form-switch mt-4">
+                                            {{ payment_method_form.is_active }}
+                                            <label class="form-check-label" for="id_is_active">Active</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check form-switch mt-4">
+                                            {{ payment_method_form.is_default }}
+                                            <label class="form-check-label" for="id_is_default">Default</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Payment Methods Table -->
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="paymentMethodsTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Default</th>
+                                        <th>Order</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for method in payment_methods %}
+                                    <tr>
+                                        <td><strong>{{ method.name }}</strong></td>
+                                        <td><span class="badge bg-info">{{ method.get_payment_type_display }}</span></td>
+                                        <td>
+                                            {% if method.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if method.is_default %}
+                                                <span class="badge bg-primary">Default</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ method.sort_order }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary edit-payment-method-btn"
+                                                    data-id="{{ method.id }}"
+                                                    data-name="{{ method.name }}"
+                                                    data-type="{{ method.payment_type }}"
+                                                    data-desc="{{ method.description|escape }}"
+                                                    data-active="{{ method.is_active|yesno:'true,false' }}"
+                                                    data-default="{{ method.is_default|yesno:'true,false' }}"
+                                                    data-sort="{{ method.sort_order }}"
+                                                    data-details='{{ method.details|default:"{}"|escape }}'>
+                                                <i class="fas fa-edit"></i> Edit
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger delete-payment-method-btn"
+                                                    data-id="{{ method.id }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            No payment methods configured. Click "Add New" above to add one.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Terms Section -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-transparent border-bottom">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h6 class="mb-0"><i class="fas fa-clock me-2"></i>Payment Terms</h6>
+                            <button class="btn btn-sm btn-outline-primary" onclick="togglePaymentTermForm()">
+                                <i class="fas fa-plus me-1"></i>Add New
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <!-- Add/Edit Payment Term Form -->
+                        <div id="paymentTermFormContainer" class="d-none" style="background: #f8f9fc; padding: 20px; border-bottom: 1px solid #e8ecf1;">
+                            <form method="post" id="paymentTermForm">
+                                {% csrf_token %}
+                                <input type="hidden" name="active_tab" value="payment-term">
+                                <input type="hidden" name="term_id" id="term_id" value="">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Name <span class="text-danger">*</span></label>
+                                        {{ payment_term_form.name }}
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Days</label>
+                                        {{ payment_term_form.days }}
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Sort Order</label>
+                                        {{ payment_term_form.sort_order }}
+                                    </div>
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-sm btn-primary me-2">
+                                            <i class="fas fa-save me-1"></i>Save
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="togglePaymentTermForm()">
+                                            <i class="fas fa-times me-1"></i>Cancel
+                                        </button>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Description</label>
+                                        {{ payment_term_form.description }}
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check form-switch mt-2">
+                                            {{ payment_term_form.is_active }}
+                                            <label class="form-check-label" for="id_is_active">Active</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check form-switch mt-2">
+                                            {{ payment_term_form.is_default }}
+                                            <label class="form-check-label" for="id_is_default">Default</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Payment Terms Table -->
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="paymentTermsTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Days</th>
+                                        <th>Description</th>
+                                        <th>Status</th>
+                                        <th>Default</th>
+                                        <th>Order</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for term in payment_terms %}
+                                    <tr>
+                                        <td><strong>{{ term.name }}</strong></td>
+                                        <td>{{ term.days }} days</td>
+                                        <td>{{ term.description|truncatewords:10 }}</td>
+                                        <td>
+                                            {% if term.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if term.is_default %}
+                                                <span class="badge bg-primary">Default</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ term.sort_order }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary edit-term-btn"
+                                                    data-id="{{ term.id }}"
+                                                    data-name="{{ term.name }}"
+                                                    data-days="{{ term.days }}"
+                                                    data-desc="{{ term.description|escape }}"
+                                                    data-active="{{ term.is_active|yesno:'true,false' }}"
+                                                    data-default="{{ term.is_default|yesno:'true,false' }}"
+                                                    data-sort="{{ term.sort_order }}">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger delete-term-btn"
+                                                    data-id="{{ term.id }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">
+                                            No payment terms configured. Click "Add New" above to add one.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Toggle Payment Method form visibility
+function togglePaymentMethodForm() {
+    document.getElementById('paymentMethodFormContainer').classList.toggle('d-none');
+}
+function togglePaymentTermForm() {
+    document.getElementById('paymentTermFormContainer').classList.toggle('d-none');
+}
+
+// Edit Payment Method
+document.querySelectorAll('.edit-payment-method-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.getElementById('method_id').value = this.dataset.id;
+        document.getElementById('id_name').value = this.dataset.name;
+        document.getElementById('id_description').value = this.dataset.desc;
+        document.getElementById('id_sort_order').value = this.dataset.sort;
+        togglePaymentMethodForm();
+    });
+});
+
+// Edit Payment Term
+document.querySelectorAll('.edit-term-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.getElementById('term_id').value = this.dataset.id;
+        document.getElementById('id_name').value = this.dataset.name;
+        document.getElementById('id_days').value = this.dataset.days;
+        document.getElementById('id_description').value = this.dataset.desc;
+        document.getElementById('id_sort_order').value = this.dataset.sort;
+        togglePaymentTermForm();
+    });
+});
+
+// Delete Payment Method
+document.querySelectorAll('.delete-payment-method-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        Swal.fire({
+            title: 'Delete Payment Method?',
+            text: 'This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: '<i class="fas fa-trash me-2"></i>Yes, delete it!',
+            cancelButtonText: '<i class="fas fa-times me-2"></i>Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{% url "settings_app:delete_payment_method" %}';
+                const csrf = document.createElement('input');
+                csrf.type = 'hidden';
+                csrf.name = 'csrfmiddlewaretoken';
+                csrf.value = '{{ csrf_token }}';
+                form.appendChild(csrf);
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = this.dataset.id;
+                form.appendChild(idInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    });
+});
+
+// Delete Payment Term
+document.querySelectorAll('.delete-term-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        Swal.fire({
+            title: 'Delete Payment Term?',
+            text: 'This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: '<i class="fas fa-trash me-2"></i>Yes, delete it!',
+            cancelButtonText: '<i class="fas fa-times me-2"></i>Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{% url "settings_app:delete_payment_term" %}';
+                const csrf = document.createElement('input');
+                csrf.type = 'hidden';
+                csrf.name = 'csrfmiddlewaretoken';
+                csrf.value = '{{ csrf_token }}';
+                form.appendChild(csrf);
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = this.dataset.id;
+                form.appendChild(idInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    });
+});
+
+// Edit Template
+document.querySelectorAll('.edit-template-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.getElementById('template_id').value = this.dataset.id;
+        document.getElementById('id_template_type').value = this.dataset.type;
+        document.getElementById('id_subject').value = this.dataset.subject;
+        document.getElementById('id_body').value = this.dataset.body;
+        document.getElementById('id_is_active').checked = this.dataset.active === 'true';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+});
+
+function resetTemplateForm() {
+    document.getElementById('template_id').value = '';
+    document.getElementById('templateForm').reset();
+}
+
+// Test Email Connection
+function testEmailConnection() {
+    Swal.fire({
+        title: 'Test Email Connection',
+        text: 'Sending test email to ' + document.getElementById('id_smtp_username').value + '...',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+            fetch(window.location.href, {
+                method: 'POST',
+                headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                body: new URLSearchParams(new FormData(document.getElementById('emailForm')))
+            })
+            .then(r => r.json())
+            .then(data => {
+                Swal.close();
+                if (data.status === 'ok') {
+                    Swal.fire({icon: 'success', title: 'Connection Successful!', text: 'Test email sent successfully.'});
+                } else {
+                    Swal.fire({icon: 'error', title: 'Connection Failed', text: data.message || 'Failed to send test email.'});
+                }
+            })
+            .catch(() => {
+                Swal.close();
+                Swal.fire({icon: 'error', title: 'Connection Failed', text: 'Could not connect to SMTP server. Check your settings.'});
+            });
+        }
+    });
+}
+</script>
+{% endblock %}

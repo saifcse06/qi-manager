@@ -69,6 +69,14 @@
                     {% endif %}
                     {% endif %}
 
+                    <span class="nav-section-title">System</span>
+                    {% if request.user.is_superuser or request.user|has_role:"Super Admin" %}
+                    <a href="{% url 'settings_app:settings_dashboard' %}" class="nav-link {% if 'settings' in request.path %}active{% endif %}">
+                        <i class="nav-icon fas fa-cog"></i>
+                        <span>System Settings</span>
+                    </a>
+                    {% endif %}
+
                     <span class="nav-section-title">Account</span>
                     <a href="{% url 'profile' %}" class="nav-link {% if 'profile' in request.path %}active{% endif %}">
                         <i class="nav-icon fas fa-user-gear"></i>
@@ -105,62 +113,10 @@
                     <form class="topbar-search" method="GET" action="">
                         <div class="input-group input-group-sm">
                             <input type="text" class="form-control form-control-sm" placeholder="Search anything...">
-                            <button class="btn btn-outline-light btn-sm" type="button">
+                            <button class="btn btn-outline-info btn-sm" type="button">
                                 <i class="fas fa-search"></i>
                             </button>
                         </div>
-                    </form>
-                    <ul class="topbar-actions">
-                        <li class="dropdown">
-                            <a href="#" class="topbar-btn" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-bell"></i>
-                                <span class="topbar-badge"></span>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end notification-dropdown">
-                                <li class="dropdown-header">
-                                    <h6 class="mb-0">Notifications</h6>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a class="dropdown-item" href="#">
-                                        <div class="d-flex align-items-center">
-                                            <div class="notification-icon bg-primary"><i class="fas fa-user-plus"></i></div>
-                                            <div class="flex-grow-1 ms-2">
-                                                <p class="mb-0 text-dark">New user registered</p>
-                                                <small class="text-muted">Just now</small>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li class="dropdown-footer text-center">
-                                    <a href="#" class="text-decoration-none small">View all notifications</a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li class="dropdown ms-2">
-                            <a href="#" class="topbar-btn topbar-avatar" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span class="avatar">
-                                    {{ request.user.username|make_list|first|upper }}
-                                </span>
-                                <span class="d-none d-md-inline ms-2">{{ request.user.username }}</span>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end user-dropdown">
-                                <li>
-                                    <a class="dropdown-item" href="{% url 'profile' %}">
-                                        <i class="fas fa-user me-2"></i>Profile
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">
-                                        <i class="fas fa-sign-out-alt me-2"></i>Sign Out
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                    <form id="logoutForm" action="{% url 'logout' %}" method="post" class="d-none">
-                        {% csrf_token %}
                     </form>
                 </div>
             </header>
