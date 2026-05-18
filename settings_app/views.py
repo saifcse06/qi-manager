@@ -5,6 +5,7 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from accounts.views import PermissionRequiredMixin
 from .models import (
     CompanySettings, EmailConfiguration, EmailTemplate,
     QuotationConfiguration, InvoiceConfiguration, PaymentMethod, PaymentTerm,
@@ -23,9 +24,10 @@ def _get_or_create(model):
     return model()
 
 
-class SettingsDashboardView(LoginRequiredMixin, TemplateView):
+class SettingsDashboardView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
     """Main System Settings dashboard with tab-based navigation."""
     template_name = 'settings_app/settings_dashboard.html'
+    required_permission = 'settings_app.view_settings'
 
     def get(self, request, *args, **kwargs):
         """Handle GET requests - render forms with current settings data."""
@@ -67,6 +69,10 @@ class SettingsDashboardView(LoginRequiredMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         """Handle all POST requests for settings form submissions."""
+        if not request.user.has_permission('settings_app.change_settings'):
+            messages.error(request, "You don't have permission to modify settings.")
+            return redirect(f'{request.path}?tab={request.POST.get("active_tab", "company")}')
+
         active_tab = request.POST.get('active_tab', 'company')
         handler_map = {
             'company': self._handle_company,
@@ -182,6 +188,12 @@ class SettingsDashboardView(LoginRequiredMixin, TemplateView):
 
 
 class DeletePaymentMethodView(LoginRequiredMixin, View):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.has_permission('settings_app.delete_paymentmethod'):
+            messages.error(request, "You don't have permission to delete payment methods.")
+            return redirect('settings_app:settings_dashboard')
+        return super().dispatch(request, *args, **kwargs)
+
     def post(self, request, *args, **kwargs):
         method_id = request.POST.get('id')
         try:
@@ -194,6 +206,12 @@ class DeletePaymentMethodView(LoginRequiredMixin, View):
 
 
 class DeletePaymentTermView(LoginRequiredMixin, View):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.has_permission('settings_app.delete_paymentterm'):
+            messages.error(request, "You don't have permission to delete payment terms.")
+            return redirect('settings_app:settings_dashboard')
+        return super().dispatch(request, *args, **kwargs)
+
     def post(self, request, *args, **kwargs):
         term_id = request.POST.get('id')
         try:

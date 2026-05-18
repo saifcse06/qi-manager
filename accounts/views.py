@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.views import View
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
@@ -101,7 +102,6 @@ class UserListView(LoginRequiredMixin, RoleRequiredMixin, ListViewMixin, ListVie
     model = User
     template_name = 'accounts/user_list.html'
     context_object_name = 'users'
-    paginate_by = 10
     required_roles = ['Super Admin', 'Admin']
 
     def get_queryset(self):
@@ -189,7 +189,6 @@ class RoleListView(LoginRequiredMixin, RoleRequiredMixin, ListViewMixin, ListVie
     model = Role
     template_name = 'accounts/role_list.html'
     context_object_name = 'roles'
-    paginate_by = 10
     required_roles = ['Super Admin', 'Admin']
 
     def get_queryset(self):
@@ -201,6 +200,11 @@ class RoleListView(LoginRequiredMixin, RoleRequiredMixin, ListViewMixin, ListVie
                 Q(description__icontains=search_query)
             )
         return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('search', '')
+        return context
 
 
 class RoleCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
@@ -270,7 +274,6 @@ class PermissionListView(LoginRequiredMixin, RoleRequiredMixin, ListViewMixin, L
     model = Permission
     template_name = 'accounts/permission_list.html'
     context_object_name = 'permissions'
-    paginate_by = 10
     required_roles = ['Super Admin', 'Admin']
 
     def get_queryset(self):
@@ -283,6 +286,11 @@ class PermissionListView(LoginRequiredMixin, RoleRequiredMixin, ListViewMixin, L
                 Q(description__icontains=search_query)
             )
         return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('search', '')
+        return context
 
 
 class PermissionCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
@@ -325,6 +333,177 @@ class PermissionDetailView(LoginRequiredMixin, RoleRequiredMixin, DetailView):
     template_name = 'accounts/permission_detail.html'
     context_object_name = 'permission'
     required_roles = ['Super Admin', 'Admin']
+
+
+# AJAX DataTable Views
+class UserDatatableView(LoginRequiredMixin, RoleRequiredMixin, View):
+    """Server-side DataTables endpoint for users."""
+    required_roles = ['Super Admin', 'Admin']
+
+    def get(self, request):
+        draw = int(request.GET.get('draw', 1))
+        start = int(request.GET.get('start', 0))
+        length = int(request.GET.get('length', 10))
+        search_value = request.GET.get('search[value]', '')
+        order_col = int(request.GET.get('order[0][column]', 0))
+        order_dir = request.GET.get('order[0][dir]', 'desc')
+
+        queryset = User.objects.all()
+
+        # Search
+        if search_value:
+            queryset = queryset.filter(
+                Q(username__icontains=search_value) |
+                Q(email__icontains=search_value) |
+                Q(first_name__icontains=search_value) |
+                Q(last_name__icontains=search_value)
+            )
+
+        # Count total and filtered
+        total_count = User.objects.count()
+        filtered_count = queryset.count()
+
+        # Ordering
+        order_fields = ['-date_joined', 'username', 'email', 'first_name', 'last_name', 'is_active']
+        if order_col < len(order_fields):
+            order_field = order_fields[order_col]
+            if order_dir == 'asc':
+                order_field = order_field.lstrip('-')
+            else:
+                if not order_field.startswith('-'):
+                    order_field = '-' + order_field
+            queryset = queryset.order_by(order_field)
+
+        # Pagination
+        queryset = queryset[start:start + length]
+
+        data = []
+        for user in queryset:
+            roles = ', '.join(user.roles.values_list('name', flat=True))
+            data.append({
+                'id': user.pk,
+                'username': user.username,
+                'full_name': user.get_full_name() or user.username,
+                'email': user.email,
+                'roles': roles if roles else '<span class="badge bg-light text-muted">No Roles</span>',
+                'is_active': '<span class="badge bg-success-subtle text-success">Active</span>' if user.is_active else '<span class="badge bg-danger-subtle text-danger">Inactive</span>',
+            })
+
+        return JsonResponse({
+            'draw': draw,
+            'recordsTotal': total_count,
+            'recordsFiltered': filtered_count,
+            'data': data,
+        }, status=200)
+
+
+class RoleDatatableView(LoginRequiredMixin, RoleRequiredMixin, View):
+    """Server-side DataTables endpoint for roles."""
+    required_roles = ['Super Admin', 'Admin']
+
+    def get(self, request):
+        draw = int(request.GET.get('draw', 1))
+        start = int(request.GET.get('start', 0))
+        length = int(request.GET.get('length', 10))
+        search_value = request.GET.get('search[value]', '')
+        order_col = int(request.GET.get('order[0][column]', 0))
+        order_dir = request.GET.get('order[0][dir]', 'asc')
+
+        queryset = Role.objects.all()
+
+        # Search
+        if search_value:
+            queryset = queryset.filter(
+                Q(name__icontains=search_value) |
+                Q(description__icontains=search_value)
+            )
+
+        total_count = Role.objects.count()
+        filtered_count = queryset.count()
+
+        # Ordering
+        order_fields = ['name', 'description']
+        if order_col < len(order_fields):
+            order_field = order_fields[order_col]
+            if order_dir == 'desc':
+                order_field = '-' + order_field
+            queryset = queryset.order_by(order_field)
+
+        # Pagination
+        queryset = queryset[start:start + length]
+
+        data = []
+        for role in queryset:
+            data.append({
+                'id': role.pk,
+                'name': role.name,
+                'description': role.description or '',
+                'permissions': role.permissions.count(),
+                'users': role.users.count(),
+                'created_at': role.created_at.strftime('%b %d, %Y') if role.created_at else '',
+            })
+
+        return JsonResponse({
+            'draw': draw,
+            'recordsTotal': total_count,
+            'recordsFiltered': filtered_count,
+            'data': data,
+        }, status=200)
+
+
+class PermissionDatatableView(LoginRequiredMixin, RoleRequiredMixin, View):
+    """Server-side DataTables endpoint for permissions."""
+    required_roles = ['Super Admin', 'Admin']
+
+    def get(self, request):
+        draw = int(request.GET.get('draw', 1))
+        start = int(request.GET.get('start', 0))
+        length = int(request.GET.get('length', 10))
+        search_value = request.GET.get('search[value]', '')
+        order_col = int(request.GET.get('order[0][column]', 0))
+        order_dir = request.GET.get('order[0][dir]', 'asc')
+
+        queryset = Permission.objects.all()
+
+        # Search
+        if search_value:
+            queryset = queryset.filter(
+                Q(name__icontains=search_value) |
+                Q(codename__icontains=search_value) |
+                Q(description__icontains=search_value)
+            )
+
+        total_count = Permission.objects.count()
+        filtered_count = queryset.count()
+
+        # Ordering
+        order_fields = ['name', 'codename', 'description']
+        if order_col < len(order_fields):
+            order_field = order_fields[order_col]
+            if order_dir == 'desc':
+                order_field = '-' + order_field
+            queryset = queryset.order_by(order_field)
+
+        # Pagination
+        queryset = queryset[start:start + length]
+
+        data = []
+        for perm in queryset:
+            roles = ', '.join(perm.roles.values_list('name', flat=True))
+            data.append({
+                'id': perm.pk,
+                'name': perm.name,
+                'codename': perm.codename,
+                'description': perm.description or '',
+                'roles': roles if roles else 'Unassigned',
+            })
+
+        return JsonResponse({
+            'draw': draw,
+            'recordsTotal': total_count,
+            'recordsFiltered': filtered_count,
+            'data': data,
+        }, status=200)
 
 
 # AJAX Views for dynamic form loading

@@ -9,6 +9,7 @@ from accounts.views import (
     UserListView, UserCreateView, UserUpdateView, UserDeleteView, UserDetailView,
     RoleListView, RoleCreateView, RoleUpdateView, RoleDeleteView, RoleDetailView,
     PermissionListView, PermissionCreateView, PermissionUpdateView, PermissionDeleteView, PermissionDetailView,
+    UserDatatableView, RoleDatatableView, PermissionDatatableView,
     LoadRolesView, LoadPermissionsView,
 )
 
@@ -41,6 +42,11 @@ urlpatterns = [
     # AJAX URLs
     path('ajax/load-roles/', LoadRolesView.as_view(), name='ajax_load_roles'),
     path('ajax/load-permissions/', LoadPermissionsView.as_view(), name='ajax_load_permissions'),
+
+    # DataTable AJAX endpoints
+    path('ajax/users-datatable/', UserDatatableView.as_view(), name='users_datatable'),
+    path('ajax/roles-datatable/', RoleDatatableView.as_view(), name='roles_datatable'),
+    path('ajax/permissions-datatable/', PermissionDatatableView.as_view(), name='permissions_datatable'),
 
     # System Settings URLs
     path('settings/', include('settings_app.urls', namespace='settings_app')),

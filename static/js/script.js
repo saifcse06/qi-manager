@@ -1,5 +1,5 @@
 /**
- * QI Manager – Interactive Dashboard JavaScript
+ * QI Manager - Interactive Dashboard JavaScript
  * Version: 2.0.0
  */
 
@@ -24,7 +24,6 @@
         _initSidebar: function () {
             var self = this;
 
-            // Toggle sidebar on mobile
             $('#sidebarToggle').on('click', function (e) {
                 e.preventDefault();
                 var sidebar = $('#sidebar');
@@ -42,7 +41,6 @@
                 }
             });
 
-            // Close sidebar on outside click (mobile)
             $(document).on('click', function (e) {
                 if ($(window).width() <= 768) {
                     var sidebar = $('#sidebar');
@@ -54,7 +52,6 @@
                 }
             });
 
-            // Close sidebar on resize to desktop
             $(window).on('resize', function () {
                 if ($(window).width() > 768) {
                     $('#sidebar').removeClass('show');
@@ -62,7 +59,6 @@
                 }
             });
 
-            // Active link highlighting
             var path = window.location.pathname;
             $('.nav-link').each(function () {
                 var href = $(this).attr('href');
@@ -76,9 +72,6 @@
            TOPBAR
            ================================ */
         _initTopbar: function () {
-            var self = this;
-
-            // Click outside dropdowns to close
             $(document).on('click', function (e) {
                 var target = $(e.target);
                 if (!target.closest('.dropdown').length) {
@@ -86,7 +79,6 @@
                 }
             });
 
-            // Manual dropdown toggle (avoids conflict with Bootstrap data-bs-toggle)
             $('.dropdown > a').on('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -95,7 +87,6 @@
                 menu.toggleClass('show');
             });
 
-            // Notification mark as read toggle
             $(document).on('click', '.notification-dropdown .dropdown-item', function () {
                 var $item = $(this);
                 if (!$item.hasClass('dropdown-header') && !$item.closest('.dropdown-footer').length) {
@@ -105,139 +96,216 @@
         },
 
         /* ================================
-           DATA TABLES
+           DATA TABLES (Server-Side)
            ================================ */
         _initDataTables: function () {
-            // User table
-            if ($.fn.DataTable.isDataTable('#usersTable')) {
-                $('#usersTable').DataTable().destroy();
+            if (typeof $.fn.DataTable === 'undefined') {
+                console.warn('QI: DataTables plugin not loaded.');
+                return;
             }
-            $('#usersTable').DataTable({
-                responsive: true,
-                lengthChange: true,
-                autoWidth: false,
-                pageLength: 10,
-                language: {
-                    search: '<div class="d-flex align-items-center"><i class="fas fa-search me-2 text-muted"></i><input type="text" class="form-control form-control-sm" placeholder="Search users..."></div>',
-                    searchPlaceholder: '',
-                    lengthMenu: 'Show _MENU_',
-                    info: 'Showing _START_ to _END_ of _TOTAL_ entries',
-                    infoEmpty: 'No entries found',
-                    infoFiltered: '(filtered from _MAX_ total)',
-                    zeroRecords: '<div class="text-center py-4 text-muted">No matching records found</div>',
-                    paginate: {
-                        first: '<i class="fas fa-angle-double-left"></i>',
-                        last: '<i class="fas fa-angle-double-right"></i>',
-                        next: '<i class="fas fa-angle-right"></i>',
-                        previous: '<i class="fas fa-angle-left"></i>'
-                    }
-                },
-                dom: '<"top d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex"f>>rt<"bottom d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex"p>>',
-                buttons: [
-                    {
-                        extend: 'copyHtml5',
-                        text: '<i class="fas fa-copy"></i>',
-                        titleAttr: 'Copy'
+
+            var self = this;
+
+            // --- Users Table ---
+            if ($('#usersTable').length) {
+                if ($.fn.DataTable.isDataTable('#usersTable')) {
+                    $('#usersTable').DataTable().destroy();
+                }
+                self._usersTable = $('#usersTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: $('#usersTable').data('ajax-url') || '/ajax/users-datatable/',
+                        dataSrc: 'data'
                     },
-                    {
-                        extend: 'csvHtml5',
-                        text: '<i class="fas fa-file-csv"></i>',
-                        titleAttr: 'CSV'
+                    responsive: true,
+                    lengthChange: true,
+                    autoWidth: false,
+                    pageLength: 10,
+                    order: [[1, 'desc']],
+                    language: {
+                        searchPlaceholder: 'Search users...',
+                        lengthMenu: 'Show _MENU_',
+                        info: 'Showing _START_ to _END_ of _TOTAL_ entries',
+                        infoEmpty: 'No entries found',
+                        infoFiltered: '(filtered from _MAX_ total)',
+                        zeroRecords: '<div class="text-center py-4 text-muted">No matching records found</div>',
+                        paginate: {
+                            first: '<i class="fas fa-angle-double-left"></i>',
+                            last: '<i class="fas fa-angle-double-right"></i>',
+                            next: '<i class="fas fa-angle-right"></i>',
+                            previous: '<i class="fas fa-angle-left"></i>'
+                        }
                     },
-                    {
-                        extend: 'excelHtml5',
-                        text: '<i class="fas fa-file-excel"></i>',
-                        titleAttr: 'Excel'
+                    columns: [
+                        { data: null, orderable: false, render: function (data, type, row, meta) { return meta.row + 1; } },
+                        {
+                            data: null,
+                            render: function (data, type, row) {
+                                var initials = (row.username || '?').charAt(0).toUpperCase();
+                                return '<div class="d-flex align-items-center">' +
+                                    '<div class="avatar-sm avatar-rounded bg-primary bg-opacity-10 text-primary me-2" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;">' + initials + '</div>' +
+                                    '<div><div class="fw-semibold">' + (row.full_name || row.username) + '</div><small class="text-muted">@' + row.username + '</small></div>' +
+                                    '</div>';
+                            }
+                        },
+                        { data: 'email' },
+                        { data: 'roles' },
+                        { data: 'is_active' },
+                        {
+                            data: null, orderable: false,
+                            render: function (data, type, row) {
+                                return '<div class="btn-group btn-group-sm">' +
+                                    '<a href="/users/' + row.id + '/" class="btn btn-outline-info" data-bs-toggle="tooltip" title="View"><i class="fas fa-eye"></i></a>' +
+                                    '<a href="/users/' + row.id + '/update/" class="btn btn-outline-warning" data-bs-toggle="tooltip" title="Edit"><i class="fas fa-edit"></i></a>' +
+                                    '<button type="button" class="btn btn-outline-danger delete-user-btn" data-id="' + row.id + '" data-name="' + (row.full_name || row.username) + '" title="Delete"><i class="fas fa-trash"></i></button>' +
+                                    '</div>';
+                            }
+                        }
+                    ]
+                });
+            }
+
+            // --- Roles Table ---
+            if ($('#rolesTable').length) {
+                if ($.fn.DataTable.isDataTable('#rolesTable')) {
+                    $('#rolesTable').DataTable().destroy();
+                }
+                self._rolesTable = $('#rolesTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: $('#rolesTable').data('ajax-url') || '/ajax/roles-datatable/',
+                        dataSrc: 'data'
                     },
-                    {
-                        extend: 'pdfHtml5',
-                        text: '<i class="fas fa-file-pdf"></i>',
-                        titleAttr: 'PDF'
-                    }
-                ]
+                    responsive: true,
+                    lengthChange: true,
+                    autoWidth: false,
+                    pageLength: 10,
+                    order: [[1, 'asc']],
+                    language: {
+                        searchPlaceholder: '',
+                        lengthMenu: 'Show _MENU_',
+                        info: 'Showing _START_ to _END_ of _TOTAL_ entries',
+                        infoEmpty: 'No entries found',
+                        infoFiltered: '(filtered from _MAX_ total)',
+                        zeroRecords: '<div class="text-center py-4 text-muted">No matching records found</div>',
+                        paginate: {
+                            first: '<i class="fas fa-angle-double-left"></i>',
+                            last: '<i class="fas fa-angle-double-right"></i>',
+                            next: '<i class="fas fa-angle-right"></i>',
+                            previous: '<i class="fas fa-angle-left"></i>'
+                        }
+                    },
+                    columns: [
+                        { data: null, orderable: false, render: function (data, type, row, meta) { return meta.row + 1; } },
+                        {
+                            data: null,
+                            render: function (data, type, row) {
+                                var initials = (row.name || '?').charAt(0).toUpperCase();
+                                return '<div class="d-flex align-items-center">' +
+                                    '<div class="avatar-sm avatar-rounded bg-primary bg-opacity-10 text-primary me-2" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;">' + initials + '</div>' +
+                                    '<div><div class="fw-semibold">' + row.name + '</div><small class="text-muted">' + (row.created_at || '') + '</small></div>' +
+                                    '</div>';
+                            }
+                        },
+                        { data: 'description' },
+                        { data: 'permissions', render: function (data) { return data > 0 ? '<span class="badge bg-info-subtle text-info">' + data + ' perms</span>' : '<span class="badge bg-light text-muted">None</span>'; } },
+                        { data: 'users', render: function (data) { return data > 0 ? '<span class="badge bg-success-subtle text-success">' + data + ' users</span>' : '<span class="badge bg-light text-muted">None</span>'; } },
+                        {
+                            data: null, orderable: false,
+                            render: function (data, type, row) {
+                                return '<div class="btn-group btn-group-sm">' +
+                                    '<a href="/roles/' + row.id + '/" class="btn btn-outline-info" data-bs-toggle="tooltip" title="View"><i class="fas fa-eye"></i></a>' +
+                                    '<a href="/roles/' + row.id + '/update/" class="btn btn-outline-warning" data-bs-toggle="tooltip" title="Edit"><i class="fas fa-edit"></i></a>' +
+                                    '<button type="button" class="btn btn-outline-danger delete-role-btn" data-id="' + row.id + '" data-name="' + row.name + '" data-perms="' + row.permissions + '" data-users="' + row.users + '" title="Delete"><i class="fas fa-trash"></i></button>' +
+                                    '</div>';
+                            }
+                        }
+                    ]
+                });
+            }
+
+            // --- Permissions Table ---
+            if ($('#permissionsTable').length) {
+                if ($.fn.DataTable.isDataTable('#permissionsTable')) {
+                    $('#permissionsTable').DataTable().destroy();
+                }
+                self._permissionsTable = $('#permissionsTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: $('#permissionsTable').data('ajax-url') || '/ajax/permissions-datatable/',
+                        dataSrc: 'data'
+                    },
+                    responsive: true,
+                    lengthChange: true,
+                    autoWidth: false,
+                    pageLength: 10,
+                    order: [[1, 'asc']],
+                    language: {
+                        searchPlaceholder: '',
+                        lengthMenu: 'Show _MENU_',
+                        info: 'Showing _START_ to _END_ of _TOTAL_ entries',
+                        infoEmpty: 'No entries found',
+                        infoFiltered: '(filtered from _MAX_ total)',
+                        zeroRecords: '<div class="text-center py-4 text-muted">No matching records found</div>',
+                        paginate: {
+                            first: '<i class="fas fa-angle-double-left"></i>',
+                            last: '<i class="fas fa-angle-double-right"></i>',
+                            next: '<i class="fas fa-angle-right"></i>',
+                            previous: '<i class="fas fa-angle-left"></i>'
+                        }
+                    },
+                    columns: [
+                        { data: null, orderable: false, render: function (data, type, row, meta) { return meta.row + 1; } },
+                        { data: 'name' },
+                        { data: 'codename', render: function (data) { return '<code class="bg-light px-2 py-1 rounded">' + data + '</code>'; } },
+                        { data: 'description' },
+                        { data: 'roles' },
+                        {
+                            data: null, orderable: false,
+                            render: function (data, type, row) {
+                                return '<div class="btn-group btn-group-sm">' +
+                                    '<a href="/permissions/' + row.id + '/" class="btn btn-outline-info" data-bs-toggle="tooltip" title="View"><i class="fas fa-eye"></i></a>' +
+                                    '<a href="/permissions/' + row.id + '/update/" class="btn btn-outline-warning" data-bs-toggle="tooltip" title="Edit"><i class="fas fa-edit"></i></a>' +
+                                    '<button type="button" class="btn btn-outline-danger delete-permission-btn" data-id="' + row.id + '" data-name="' + row.name + '" data-codename="' + row.codename + '" title="Delete"><i class="fas fa-trash"></i></button>' +
+                                    '</div>';
+                            }
+                        }
+                    ]
+                });
+            }
+
+            // --- Delete button handlers (event delegation for AJAX-rendered rows) ---
+            $(document).on('click', '.delete-user-btn', function () {
+                var id = $(this).data('id');
+                var name = $(this).data('name');
+                $('#deleteUserName').text(name);
+                $('#deleteUserForm').attr('action', '/users/' + id + '/delete/');
             });
 
-            // Roles table
-            if ($.fn.DataTable.isDataTable('#rolesTable')) {
-                $('#rolesTable').DataTable().destroy();
-            }
-            $('#rolesTable').DataTable({
-                responsive: true,
-                lengthChange: true,
-                autoWidth: false,
-                pageLength: 10,
-                language: {
-                    search: '<div class="d-flex align-items-center"><i class="fas fa-search me-2 text-muted"></i><input type="text" class="form-control form-control-sm" placeholder="Search roles..."></div>',
-                    searchPlaceholder: '',
-                    lengthMenu: 'Show _MENU_',
-                    info: 'Showing _START_ to _END_ of _TOTAL_ entries',
-                    infoEmpty: 'No entries found',
-                    infoFiltered: '(filtered from _MAX_ total)',
-                    zeroRecords: '<div class="text-center py-4 text-muted">No matching records found</div>',
-                    paginate: {
-                        first: '<i class="fas fa-angle-double-left"></i>',
-                        last: '<i class="fas fa-angle-double-right"></i>',
-                        next: '<i class="fas fa-angle-right"></i>',
-                        previous: '<i class="fas fa-angle-left"></i>'
-                    }
-                },
-                dom: '<"top d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex"f>>rt<"bottom d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex"p>>',
-                buttons: [
-                    {
-                        extend: 'copyHtml5',
-                        text: '<i class="fas fa-copy"></i>',
-                        titleAttr: 'Copy'
-                    },
-                    {
-                        extend: 'csvHtml5',
-                        text: '<i class="fas fa-file-csv"></i>',
-                        titleAttr: 'CSV'
-                    },
-                    {
-                        extend: 'pdfHtml5',
-                        text: '<i class="fas fa-file-pdf"></i>',
-                        titleAttr: 'PDF'
-                    }
-                ]
+            $(document).on('click', '.delete-role-btn', function () {
+                var id = $(this).data('id');
+                var name = $(this).data('name');
+                var perms = $(this).data('perms');
+                var users = $(this).data('users');
+                $('#deleteRoleName').text(name);
+                var warning = '';
+                if (users > 0) warning += 'This role has ' + users + ' user(s). ';
+                if (perms > 0) warning += 'This role has ' + perms + ' permission(s).';
+                $('#deleteRoleWarning').text(warning);
+                $('#deleteRoleForm').attr('action', '/roles/' + id + '/delete/');
             });
 
-            // Permissions table
-            if ($.fn.DataTable.isDataTable('#permissionsTable')) {
-                $('#permissionsTable').DataTable().destroy();
-            }
-            $('#permissionsTable').DataTable({
-                responsive: true,
-                lengthChange: true,
-                autoWidth: false,
-                pageLength: 10,
-                language: {
-                    search: '<div class="d-flex align-items-center"><i class="fas fa-search me-2 text-muted"></i><input type="text" class="form-control form-control-sm" placeholder="Search permissions..."></div>',
-                    searchPlaceholder: '',
-                    lengthMenu: 'Show _MENU_',
-                    info: 'Showing _START_ to _END_ of _TOTAL_ entries',
-                    infoEmpty: 'No entries found',
-                    infoFiltered: '(filtered from _MAX_ total)',
-                    zeroRecords: '<div class="text-center py-4 text-muted">No matching records found</div>',
-                    paginate: {
-                        first: '<i class="fas fa-angle-double-left"></i>',
-                        last: '<i class="fas fa-angle-double-right"></i>',
-                        next: '<i class="fas fa-angle-right"></i>',
-                        previous: '<i class="fas fa-angle-left"></i>'
-                    }
-                },
-                dom: '<"top d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex"f>>rt<"bottom d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex"p>>',
-                buttons: [
-                    {
-                        extend: 'copyHtml5',
-                        text: '<i class="fas fa-copy"></i>',
-                        titleAttr: 'Copy'
-                    },
-                    {
-                        extend: 'csvHtml5',
-                        text: '<i class="fas fa-file-csv"></i>',
-                        titleAttr: 'CSV'
-                    }
-                ]
+            $(document).on('click', '.delete-permission-btn', function () {
+                var id = $(this).data('id');
+                var name = $(this).data('name');
+                var codename = $(this).data('codename');
+                $('#deletePermName').text(name);
+                $('#deletePermCodename').text(codename);
+                $('#deletePermWarning').text('');
+                $('#deletePermForm').attr('action', '/permissions/' + id + '/delete/');
             });
         },
 
@@ -245,13 +313,11 @@
            FORMS
            ================================ */
         _initForms: function () {
-            // Select all checkboxes in forms
             $('.select-all').on('change', function () {
                 var checked = $(this).prop('checked');
                 $(this).closest('.form-group').find('input[type="checkbox"]').not(this).prop('checked', checked);
             });
 
-            // Confirm checkbox
             $('#deleteConfirm').on('change', function () {
                 var btn = $(this).closest('.modal-body').siblings('.modal-footer').find('.btn-danger');
                 if ($(this).prop('checked')) {
@@ -266,7 +332,6 @@
            MODALS & SWEETALERT
            ================================ */
         _initModals: function () {
-            // Auto-close alerts after 5 seconds
             setTimeout(function () {
                 $('.alert').fadeOut('slow', function () {
                     $(this).remove();
@@ -278,7 +343,6 @@
            NOTIFICATIONS (Toast)
            ================================ */
         _initNotifications: function () {
-            // Show toast from data attributes
             $('[data-toast-message]').each(function () {
                 var $this = $(this);
                 QI.showToast(
@@ -288,7 +352,6 @@
                 );
             });
 
-            // Convert Bootstrap alerts to toasts
             $('.alert').each(function () {
                 var $alert = $(this);
                 var alertClass = $alert.attr('class') || '';
@@ -327,7 +390,7 @@
                 showConfirmButton: false,
                 timer: 3000,
                 timerProgressBar: true,
-                didOpen: (toast) => {
+                didOpen: function (toast) {
                     toast.addEventListener('mouseenter', Swal.stopTimer);
                     toast.addEventListener('mouseleave', Swal.resumeTimer);
                 }

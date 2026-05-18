@@ -35,10 +35,15 @@ def create_permissions():
         {'name': 'Can add permission', 'codename': 'accounts.add_permission', 'description': 'Can add permission'},
         {'name': 'Can change permission', 'codename': 'accounts.change_permission', 'description': 'Can change permission'},
         {'name': 'Can delete permission', 'codename': 'accounts.delete_permission', 'description': 'Can delete permission'},
-        # Dashboard / Home
-        {'name': 'Can view dashboard', 'codename': 'accounts.view_dashboard', 'description': 'Can view dashboard'},
-        {'name': 'Can view profile', 'codename': 'accounts.view_profile', 'description': 'Can view profile'},
-    ]
+# Dashboard / Home
+         {'name': 'Can view dashboard', 'codename': 'accounts.view_dashboard', 'description': 'Can view dashboard'},
+         {'name': 'Can view profile', 'codename': 'accounts.view_profile', 'description': 'Can view profile'},
+         # System Settings permissions
+         {'name': 'Can view settings', 'codename': 'settings_app.view_settings', 'description': 'Can view system settings'},
+         {'name': 'Can change settings', 'codename': 'settings_app.change_settings', 'description': 'Can change system settings'},
+         {'name': 'Can delete payment method', 'codename': 'settings_app.delete_paymentmethod', 'description': 'Can delete payment method'},
+         {'name': 'Can delete payment term', 'codename': 'settings_app.delete_paymentterm', 'description': 'Can delete payment term'},
+     ]
 
     created = []
     for perm_data in permissions_data:
@@ -72,13 +77,15 @@ def create_roles(all_permissions):
         super_admin.permissions.set(all_permissions)
         print(f"Updated role: {super_admin.name} with {all_permissions.count()} permissions")
 
-    # Admin - user and role management
+    # Admin - user, role, and settings management
     admin_perms = all_permissions.filter(
         codename__in=[
             'accounts.view_user', 'accounts.add_user', 'accounts.change_user',
             'accounts.view_role', 'accounts.add_role', 'accounts.change_role',
             'accounts.view_permission',
             'accounts.view_dashboard', 'accounts.view_profile',
+            'settings_app.view_settings', 'settings_app.change_settings',
+            'settings_app.delete_paymentmethod', 'settings_app.delete_paymentterm',
         ]
     )
     admin_role, created = Role.objects.get_or_create(
