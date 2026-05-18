@@ -145,8 +145,9 @@ user and assign roles{% endif %}{% endblock %}
                                             <div class="form-check form-check-inline mb-0">
                                                 {{ field }}
                                                 <label class="form-check-label" for="{{ field.id_for_label }}">
-                                                    <span class="badge bg-primary bg-opacity-10 text-primary border">{{
-                                                        field.choice_label }}</span>
+                                                    <span class="badge bg-primary bg-opacity-10 text-primary border">
+                                                        {{ field.choice_label }}
+                                                    </span>
                                                 </label>
                                             </div>
                                             {% endfor %}
