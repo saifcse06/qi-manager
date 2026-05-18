@@ -283,6 +283,8 @@
                 var name = $(this).data('name');
                 $('#deleteUserName').text(name);
                 $('#deleteUserForm').attr('action', '/users/' + id + '/delete/');
+                var modal = new bootstrap.Modal(document.getElementById('deleteUserModal'));
+                modal.show();
             });
 
             $(document).on('click', '.delete-role-btn', function () {
@@ -296,6 +298,8 @@
                 if (perms > 0) warning += 'This role has ' + perms + ' permission(s).';
                 $('#deleteRoleWarning').text(warning);
                 $('#deleteRoleForm').attr('action', '/roles/' + id + '/delete/');
+                var modal = new bootstrap.Modal(document.getElementById('deleteRoleModal'));
+                modal.show();
             });
 
             $(document).on('click', '.delete-permission-btn', function () {
@@ -306,6 +310,8 @@
                 $('#deletePermCodename').text(codename);
                 $('#deletePermWarning').text('');
                 $('#deletePermForm').attr('action', '/permissions/' + id + '/delete/');
+                var modal = new bootstrap.Modal(document.getElementById('deletePermissionModal'));
+                modal.show();
             });
         },
 

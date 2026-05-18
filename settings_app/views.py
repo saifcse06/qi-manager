@@ -5,7 +5,9 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from accounts.views import PermissionRequiredMixin
+from accounts.views import (
+    PermissionRequiredMixin, _sidebar_context
+)
 from .models import (
     CompanySettings, EmailConfiguration, EmailTemplate,
     QuotationConfiguration, InvoiceConfiguration, PaymentMethod, PaymentTerm,
@@ -46,6 +48,7 @@ class SettingsDashboardView(LoginRequiredMixin, PermissionRequiredMixin, Templat
             'total_payment_terms': PaymentTerm.objects.count(),
             'total_email_templates': EmailTemplate.objects.count(),
         }
+        context.update(_sidebar_context())
 
         # Instantiate forms with current data for initial rendering
         instance = _get_or_create(CompanySettings)
