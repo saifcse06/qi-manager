@@ -20,22 +20,26 @@ class CustomUserCreationForm(UserCreationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Provide custom labels for password fields
+        self.fields['username'].widget.attrs.update({'class': 'form-control'})
+        self.fields['email'].widget.attrs.update({'class': 'form-control'})
+        self.fields['first_name'].widget.attrs.update({'class': 'form-control'})
+        self.fields['last_name'].widget.attrs.update({'class': 'form-control'})
+        self.fields['roles'].widget.attrs.update({'class': 'form-check-input'})
+        self.fields['password1'].widget.attrs.update({'class': 'form-control'})
+        self.fields['password2'].widget.attrs.update({'class': 'form-control'})
+        self.fields['is_active'].widget.attrs.update({'class': 'form-check-input'})
         self.fields['password1'].label = 'Password'
         self.fields['password1'].help_text = 'Your password must contain at least 8 characters and cannot be entirely numeric.'
         self.fields['password2'].label = 'Confirm Password'
         self.fields['password2'].help_text = 'Enter the same password as above, for verification.'
 
     def save(self, commit=True):
-        # super().save(commit=False) calls UserCreationForm.save(commit=False)
-        # which calls ModelForm.save(commit=False) + sets hashed password via set_password()
         user = super().save(commit=False)
         user.email = self.cleaned_data['email']
         user.first_name = self.cleaned_data.get('first_name', '')
         user.last_name = self.cleaned_data.get('last_name', '')
         if commit:
             user.save()
-            # Save roles (m2m) after user is saved
             self.save_m2m()
             user.roles.set(self.cleaned_data.get('roles', []))
         return user
@@ -56,13 +60,18 @@ class CustomUserChangeForm(UserChangeForm):
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name', 'last_name', 'roles', 'is_active')
-        exclude = ('password',)  # Explicitly exclude password field
+        exclude = ('password',)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance.pk:
             self.fields['roles'].initial = self.instance.roles.all()
-        # Remove the default password field that UserChangeForm adds
+        self.fields['username'].widget.attrs.update({'class': 'form-control'})
+        self.fields['email'].widget.attrs.update({'class': 'form-control'})
+        self.fields['first_name'].widget.attrs.update({'class': 'form-control'})
+        self.fields['last_name'].widget.attrs.update({'class': 'form-control'})
+        self.fields['roles'].widget.attrs.update({'class': 'form-check-input'})
+        self.fields['is_active'].widget.attrs.update({'class': 'form-check-input'})
         if 'password' in self.fields:
             del self.fields['password']
 
@@ -88,6 +97,12 @@ class RoleForm(forms.ModelForm):
         model = Role
         fields = ('name', 'description', 'permissions')
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['name'].widget.attrs.update({'class': 'form-control'})
+        self.fields['description'].widget.attrs.update({'class': 'form-control', 'rows': 3})
+        self.fields['permissions'].widget.attrs.update({'class': 'form-check-input'})
+
     def save(self, commit=True):
         role = super().save(commit=False)
         if commit:
@@ -100,3 +115,9 @@ class PermissionForm(forms.ModelForm):
     class Meta:
         model = Permission
         fields = ('name', 'codename', 'description')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['name'].widget.attrs.update({'class': 'form-control'})
+        self.fields['codename'].widget.attrs.update({'class': 'form-control'})
+        self.fields['description'].widget.attrs.update({'class': 'form-control', 'rows': 3})

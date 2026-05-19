@@ -221,7 +221,37 @@ class RoleCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(_sidebar_context())
+        context['permission_groups'] = self._get_permission_groups(selected_ids=[])
         return context
+
+    def _get_permission_groups(self, selected_ids):
+        from .models import Permission
+        permissions = Permission.objects.all().order_by('codename')
+        groups = {}
+        for perm in permissions:
+            parts = perm.codename.split('.')
+            if len(parts) >= 2:
+                action_obj = parts[1]
+                if action_obj.startswith('view_'):
+                    action = 'view'
+                    model_name = action_obj[5:]
+                elif action_obj.startswith('add_'):
+                    action = 'add'
+                    model_name = action_obj[4:]
+                elif action_obj.startswith('change_'):
+                    action = 'change'
+                    model_name = action_obj[7:]
+                elif action_obj.startswith('delete_'):
+                    action = 'delete'
+                    model_name = action_obj[7:]
+                else:
+                    action = ''
+                    model_name = action_obj
+                if model_name not in groups:
+                    groups[model_name] = {'view': None, 'add': None, 'change': None, 'delete': None}
+                if action:
+                    groups[model_name][action] = {'id': perm.id, 'name': perm.name, 'selected': perm.id in selected_ids}
+        return groups
 
 
 class RoleUpdateView(LoginRequiredMixin, RoleRequiredMixin, UpdateView):
@@ -238,7 +268,38 @@ class RoleUpdateView(LoginRequiredMixin, RoleRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(_sidebar_context())
+        selected_ids = list(self.object.permissions.values_list('id', flat=True))
+        context['permission_groups'] = self._get_permission_groups(selected_ids)
         return context
+
+    def _get_permission_groups(self, selected_ids):
+        from .models import Permission
+        permissions = Permission.objects.all().order_by('codename')
+        groups = {}
+        for perm in permissions:
+            parts = perm.codename.split('.')
+            if len(parts) >= 2:
+                action_obj = parts[1]
+                if action_obj.startswith('view_'):
+                    action = 'view'
+                    model_name = action_obj[5:]
+                elif action_obj.startswith('add_'):
+                    action = 'add'
+                    model_name = action_obj[4:]
+                elif action_obj.startswith('change_'):
+                    action = 'change'
+                    model_name = action_obj[7:]
+                elif action_obj.startswith('delete_'):
+                    action = 'delete'
+                    model_name = action_obj[7:]
+                else:
+                    action = ''
+                    model_name = action_obj
+                if model_name not in groups:
+                    groups[model_name] = {'view': None, 'add': None, 'change': None, 'delete': None}
+                if action:
+                    groups[model_name][action] = {'id': perm.id, 'name': perm.name, 'selected': perm.id in selected_ids}
+        return groups
 
 
 class RoleDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
