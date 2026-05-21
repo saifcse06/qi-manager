@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block page_title %}Delete Contact Person{% endblock %}
+{% block page_subtitle %}Confirm deletion of contact person "{{ object.person_name }}"{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-danger bg-opacity-10">
+                <h5 class="card-title mb-0 text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Delete Contact Person
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">Are you sure you want to delete contact person <strong>{{ object.person_name }}</strong>?</p>
+                <p class="text-warning"><i class="fas fa-info-circle me-1"></i>This action cannot be undone.</p>
+            </div>
+            <div class="card-footer bg-transparent border-top">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'clients:contact_person_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-1"></i>Delete Contact Person
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

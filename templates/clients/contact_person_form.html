@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% block title %}{% if object %}Edit Contact Person{% else %}Create Contact Person{% endif %} - QI Manager{% endblock %}
+{% block page_title %}{% if object %}Edit Contact Person{% else %}Create New Contact Person{% endif %}{% endblock %}
+{% block page_subtitle %}{% if object %}Modify "{{ object.person_name }}" details{% else %}Add a new contact person{% endif %}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-12">
+        <div class="card border-0 shadow-sm animate-in" style="animation-delay: 0.1s;">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user me-2 text-primary"></i>
+                        {% if object %}Edit Contact Person{% else %}Create New Contact Person{% endif %}
+                    </h5>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'clients:contact_person_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Back
+                    </a>
+                    <button type="submit" form="contactPersonForm" class="btn btn-primary btn-sm">
+                        <i class="fas fa-save me-1"></i>Save
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" id="contactPersonForm">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger mb-4">
+                        {% for error in form.non_field_errors %}
+                        <i class="fas fa-exclamation-triangle me-2"></i>{{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if pre_selected_client %}
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        This contact person will be associated with the selected client.
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-4">
+                        <h6 class="text-uppercase text-muted fw-bold mb-3" style="font-size: 0.75rem; letter-spacing: 1px;">
+                            <i class="fas fa-user me-2"></i>Contact Person Details
+                        </h6>
+                        <div class="row g-3 align-items-start">
+                            <div class="col-md-4">
+                                <label for="{{ form.client.id_for_label }}" class="form-label text-md-end mb-0">Client <span class="text-danger">*</span></label>
+                            </div>
+                            <div class="col-md-8">
+                                {{ form.client }}
+                                {% if form.client.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-exclamation-circle me-1"></i>{{ form.client.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.person_name.id_for_label }}" class="form-label text-md-end mb-0">Person Name <span class="text-danger">*</span></label>
+                            </div>
+                            <div class="col-md-8">
+                                {{ form.person_name }}
+                                {% if form.person_name.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-exclamation-circle me-1"></i>{{ form.person_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.designation.id_for_label }}" class="form-label text-md-end mb-0">Designation</label>
+                            </div>
+                            <div class="col-md-8">
+                                {{ form.designation }}
+                                {% if form.designation.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-exclamation-circle me-1"></i>{{ form.designation.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.department.id_for_label }}" class="form-label text-md-end mb-0">Department</label>
+                            </div>
+                            <div class="col-md-8">
+                                {{ form.department }}
+                                {% if form.department.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-exclamation-circle me-1"></i>{{ form.department.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="mb-4">
+                        <h6 class="text-uppercase text-muted fw-bold mb-3" style="font-size: 0.75rem; letter-spacing: 1px;">
+                            <i class="fas fa-address-book me-2"></i>Contact Information
+                        </h6>
+                        <div class="row g-3 align-items-start">
+                            <div class="col-md-4">
+                                <label for="{{ form.mobile_number.id_for_label }}" class="form-label text-md-end mb-0">Mobile Number</label>
+                            </div>
+                            <div class="col-md-8">
+                                {{ form.mobile_number }}
+                                {% if form.mobile_number.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-exclamation-circle me-1"></i>{{ form.mobile_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.email.id_for_label }}" class="form-label text-md-end mb-0">Email</label>
+                            </div>
+                            <div class="col-md-8">
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-exclamation-circle me-1"></i>{{ form.email.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="mb-4">
+                        <h6 class="text-uppercase text-muted fw-bold mb-3" style="font-size: 0.75rem; letter-spacing: 1px;">
+                            <i class="fas fa-toggle-on me-2"></i>Status & Settings
+                        </h6>
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-4">
+                                <label class="form-label text-md-end mb-0">&nbsp;</label>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="form-check form-switch mb-2">
+                                    {{ form.status }}
+                                    <label class="form-check-label" for="{{ form.status.id_for_label }}">
+                                        <i class="fas fa-circle me-1 {% if form.status.value == 'active' %}text-success{% else %}text-muted{% endif %}"></i>
+                                        <strong>Active</strong>
+                                    </label>
+                                </div>
+                                {% if form.is_primary %}
+                                <div class="form-check form-switch">
+                                    {{ form.is_primary }}
+                                    <label class="form-check-label" for="{{ form.is_primary.id_for_label }}">
+                                        <i class="fas fa-star me-1 text-warning"></i>
+                                        <strong>Primary Contact</strong>
+                                    </label>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer bg-transparent border-top mt-3">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'clients:contact_person_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check me-1"></i>Save Contact Person
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

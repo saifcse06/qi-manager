@@ -34,6 +34,9 @@ INSTALLED_APPS = [
 
     # System Settings App
     'settings_app',
+
+    # Client Management App
+    'clients',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
@@ -147,6 +150,7 @@ MIDDLEWARE_ROLE_MAP = {
     r'^/roles/': ['Super Admin', 'Admin'],
     r'^/permissions/': ['Super Admin'],
     r'^/settings/': ['Super Admin'],
+    r'^/clients/': ['Super Admin', 'Admin'],
 }
 
 MIDDLEWARE_EXEMPT_URLS = [

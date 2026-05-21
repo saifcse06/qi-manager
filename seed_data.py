@@ -12,7 +12,6 @@ sys.path.insert(0, '/Users/mdsaifuddin/Desktop/SaifDev/QI-Management/Development
 django.setup()
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
 from accounts.models import Role, Permission
 
 User = get_user_model()
@@ -35,15 +34,24 @@ def create_permissions():
         {'name': 'Can add permission', 'codename': 'accounts.add_permission', 'description': 'Can add permission'},
         {'name': 'Can change permission', 'codename': 'accounts.change_permission', 'description': 'Can change permission'},
         {'name': 'Can delete permission', 'codename': 'accounts.delete_permission', 'description': 'Can delete permission'},
-# Dashboard / Home
-         {'name': 'Can view dashboard', 'codename': 'accounts.view_dashboard', 'description': 'Can view dashboard'},
-         {'name': 'Can view profile', 'codename': 'accounts.view_profile', 'description': 'Can view profile'},
-         # System Settings permissions
-         {'name': 'Can view settings', 'codename': 'settings_app.view_settings', 'description': 'Can view system settings'},
-         {'name': 'Can change settings', 'codename': 'settings_app.change_settings', 'description': 'Can change system settings'},
-         {'name': 'Can delete payment method', 'codename': 'settings_app.delete_paymentmethod', 'description': 'Can delete payment method'},
-         {'name': 'Can delete payment term', 'codename': 'settings_app.delete_paymentterm', 'description': 'Can delete payment term'},
-     ]
+        # Dashboard / Home
+        {'name': 'Can view dashboard', 'codename': 'accounts.view_dashboard', 'description': 'Can view dashboard'},
+        {'name': 'Can view profile', 'codename': 'accounts.view_profile', 'description': 'Can view profile'},
+        # System Settings permissions
+        {'name': 'Can view settings', 'codename': 'settings_app.view_settings', 'description': 'Can view system settings'},
+        {'name': 'Can change settings', 'codename': 'settings_app.change_settings', 'description': 'Can change system settings'},
+        {'name': 'Can delete payment method', 'codename': 'settings_app.delete_paymentmethod', 'description': 'Can delete payment method'},
+        {'name': 'Can delete payment term', 'codename': 'settings_app.delete_paymentterm', 'description': 'Can delete payment term'},
+        # Client Management permissions
+        {'name': 'Can view clients', 'codename': 'clients.view_client', 'description': 'Can view clients'},
+        {'name': 'Can add client', 'codename': 'clients.add_client', 'description': 'Can add client'},
+        {'name': 'Can change client', 'codename': 'clients.change_client', 'description': 'Can change client'},
+        {'name': 'Can delete client', 'codename': 'clients.delete_client', 'description': 'Can delete client'},
+        {'name': 'Can view contact person', 'codename': 'clients.view_clientcontactperson', 'description': 'Can view contact person'},
+        {'name': 'Can add contact person', 'codename': 'clients.add_clientcontactperson', 'description': 'Can add contact person'},
+        {'name': 'Can change contact person', 'codename': 'clients.change_clientcontactperson', 'description': 'Can change contact person'},
+        {'name': 'Can delete contact person', 'codename': 'clients.delete_clientcontactperson', 'description': 'Can delete contact person'},
+    ]
 
     created = []
     for perm_data in permissions_data:
@@ -77,7 +85,7 @@ def create_roles(all_permissions):
         super_admin.permissions.set(all_permissions)
         print(f"Updated role: {super_admin.name} with {all_permissions.count()} permissions")
 
-    # Admin - user, role, and settings management
+    # Admin - user, role, settings, and client management
     admin_perms = all_permissions.filter(
         codename__in=[
             'accounts.view_user', 'accounts.add_user', 'accounts.change_user',
@@ -86,12 +94,15 @@ def create_roles(all_permissions):
             'accounts.view_dashboard', 'accounts.view_profile',
             'settings_app.view_settings', 'settings_app.change_settings',
             'settings_app.delete_paymentmethod', 'settings_app.delete_paymentterm',
+            'clients.view_client', 'clients.add_client', 'clients.change_client',
+            'clients.view_clientcontactperson', 'clients.add_clientcontactperson',
+            'clients.change_clientcontactperson',
         ]
     )
     admin_role, created = Role.objects.get_or_create(
         name='Admin',
         defaults={
-            'description': 'Administrator with user and role management permissions',
+            'description': 'Administrator with user, role, settings, and client management permissions',
         }
     )
     if created:
@@ -101,13 +112,15 @@ def create_roles(all_permissions):
         admin_role.permissions.set(admin_perms)
         print(f"Updated role: {admin_role.name} with {admin_perms.count()} permissions")
 
-    # Manager - view only
+    # Manager - view only (including clients)
     manager_perms = all_permissions.filter(
         codename__in=[
             'accounts.view_user',
             'accounts.view_role',
             'accounts.view_permission',
             'accounts.view_dashboard', 'accounts.view_profile',
+            'clients.view_client',
+            'clients.view_clientcontactperson',
         ]
     )
     manager_role, created = Role.objects.get_or_create(

@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static accounts_tags %}
+{% block page_title %}Contact Persons{% endblock %}
+{% block page_subtitle %}Manage client contact persons{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title">
+                    <i class="fas fa-users me-2 text-primary"></i>
+                    Contact Person Management
+                </h5>
+                {% if request.user|has_role:"Super Admin" or request.user|has_role:"Admin" %}
+                <a href="{% url 'clients:contact_person_create' %}" class="btn btn-primary btn-sm ms-auto">
+                    <i class="fas fa-plus me-2"></i>
+                    Add Contact Person
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="contactPersonsTable" class="table table-hover align-middle mb-0" data-ajax-url="{% url 'contact_persons_datatable' %}">
+                        <thead>
+                        <tr>
+                            <th style="width:5%">#</th>
+                            <th>Client</th>
+                            <th>Name</th>
+                            <th>Designation</th>
+                            <th>Mobile</th>
+                            <th>Status</th>
+                            <th style="width:8%">Primary</th>
+                            <th style="width:12%">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteContactPersonModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger bg-opacity-10">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Delete Contact Person</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete contact person <strong id="deleteContactPersonName"></strong>?</p>
+                <p>This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteContactPersonForm" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete Contact Person
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    var table = $('#contactPersonsTable').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: $('#contactPersonsTable').data('ajax-url'),
+        columns: [
+            { data: 'id' },
+            { data: 'client_name' },
+            { data: 'person_name' },
+            { data: 'designation' },
+            { data: 'mobile' },
+            { data: 'status', orderable: false },
+            { data: 'is_primary', orderable: false },
+            { data: null, orderable: false, render: function(data, type, row) {
+                var actions = '<div class="d-flex gap-1">';
+                {% if request.user|has_role:"Super Admin" or request.user|has_role:"Admin" %}
+                actions += '<a href="/clients/contact-persons/' + row.id + '/update/" class="btn btn-outline-warning btn-sm"><i class="fas fa-edit"></i></a>';
+                {% endif %}
+                {% if request.user|has_role:"Super Admin" %}
+                actions += '<button type="button" class="btn btn-outline-danger btn-sm delete-contact" data-id="' + row.id + '" data-name="' + row.person_name + '"><i class="fas fa-trash"></i></button>';
+                {% endif %}
+                actions += '</div>';
+                return actions;
+            }}
+        ],
+        order: [[0, 'desc']],
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50], [10, 25, 50]],
+    });
+
+    $(document).on('click', '.delete-contact', function() {
+        var id = $(this).data('id');
+        var name = $(this).data('name');
+        $('#deleteContactPersonName').text(name);
+        $('#deleteContactPersonForm').attr('action', '/clients/contact-persons/' + id + '/delete/');
+        $('#deleteContactPersonModal').modal('show');
+    });
+});
+</script>
+{% endblock %}

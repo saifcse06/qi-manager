@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load accounts_tags %}
+{% block page_title %}Client Detail{% endblock %}
+{% block page_subtitle %}View details for client "{{ object.company_name }}"{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="fas fa-building me-2 text-primary"></i>Client Detail</h5>
+                <div>
+                    <a href="{% url 'clients:client_list' %}" class="btn btn-outline-secondary btn-sm me-2">
+                        <i class="fas fa-arrow-left me-1"></i>Back
+                    </a>
+                    {% if request.user|has_role:"Super Admin" or request.user|has_role:"Admin" %}
+                    <a href="{% url 'clients:client_update' object.pk %}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="avatar-xl avatar-rounded bg-primary bg-opacity-10 text-primary mx-auto d-flex align-items-center justify-content-center mb-2" style="width:100px;height:100px;font-size:2.5rem;font-weight:800;">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <h4>{{ object.company_name }}</h4>
+                        <span class="badge {% if object.status == 'active' %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %} mt-2">
+                            {% if object.status == 'active' %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </div>
+                    <div class="col-md-8">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="text-muted" style="width:140px;">Company Name</td>
+                                <td class="fw-semibold">{{ object.company_name }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Registration No</td>
+                                <td class="fw-semibold">{{ object.company_registration_no|default:"N/A" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Email</td>
+                                <td class="fw-semibold">{{ object.email|default:"N/A" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Phone</td>
+                                <td class="fw-semibold">{{ object.phone|default:"N/A" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Website</td>
+                                <td class="fw-semibold">
+                                    {% if object.website %}
+                                    <a href="{{ object.website }}" target="_blank">{{ object.website }}</a>
+                                    {% else %}N/A{% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Address</td>
+                                <td class="fw-semibold">{{ object.address|linebreaksbr|default:"N/A" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Created</td>
+                                <td>{{ object.created_at|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Last Updated</td>
+                                <td>{{ object.updated_at|date:"M d, Y H:i" }}</td>
+                            </tr>
+                        </table>
+                        {% if object.notes %}
+                        <hr>
+                        <h6 class="mb-2"><i class="fas fa-sticky-note me-2 text-muted"></i>Notes</h6>
+                        <p>{{ object.notes|linebreaksbr }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0"><i class="fas fa-users me-2 text-muted"></i>Contact Persons ({{ contact_persons|length }})</h6>
+                    {% if request.user|has_role:"Super Admin" or request.user|has_role:"Admin" %}
+                    <a href="{% url 'clients:contact_person_create' %}?client={{ object.pk }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-plus me-1"></i>Add Contact Person
+                    </a>
+                    {% endif %}
+                </div>
+                {% if contact_persons %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Designation</th>
+                                <th>Department</th>
+                                <th>Mobile</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th style="width:10%">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cp in contact_persons %}
+                            <tr>
+                                <td>{{ cp.person_name }}{% if cp.is_primary %} <i class="fas fa-star text-warning" title="Primary Contact"></i>{% endif %}</td>
+                                <td>{{ cp.designation|default:"-" }}</td>
+                                <td>{{ cp.department|default:"-" }}</td>
+                                <td>{{ cp.mobile_number|default:"-" }}</td>
+                                <td>{{ cp.email|default:"-" }}</td>
+                                <td>
+                                    {% if cp.status == 'active' %}
+                                    <span class="badge bg-success-subtle text-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-danger-subtle text-danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if request.user|has_role:"Super Admin" or request.user|has_role:"Admin" %}
+                                    <a href="{% url 'clients:contact_person_update' cp.pk %}" class="btn btn-outline-warning btn-sm"><i class="fas fa-edit"></i></a>
+                                    {% endif %}
+                                    {% if request.user|has_role:"Super Admin" %}
+                                    &nbsp;<button type="button" class="btn btn-outline-danger btn-sm delete-contact" data-id="{{ cp.pk }}" data-name="{{ cp.person_name }}"><i class="fas fa-trash"></i></button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No contact persons added yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteContactPersonModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger bg-opacity-10">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Delete Contact Person</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete contact person <strong id="deleteContactPersonName"></strong>?</p>
+                <p>This will only hide the contact person from active lists; existing records will not be affected.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteContactPersonForm" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $(document).on('click', '.delete-contact', function() {
+        var id = $(this).data('id');
+        var name = $(this).data('name');
+        $('#deleteContactPersonName').text(name);
+        $('#deleteContactPersonForm').attr('action', '/clients/contact-persons/' + id + '/delete/');
+        $('#deleteContactPersonModal').modal('show');
+    });
+});
+</script>
+{% endblock %}

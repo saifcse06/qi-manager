@@ -69,6 +69,18 @@
                     {% endif %}
                     {% endif %}
 
+                    <span class="nav-section-title">Client Management</span>
+                    {% if request.user.is_authenticated %}
+                    <a href="{% url 'clients:client_list' %}" class="nav-link {% if request.path == '/clients/' %}active{% endif %}">
+                        <i class="nav-icon fas fa-building"></i>
+                        <span>Clients</span>
+                    </a>
+                    <a href="{% url 'clients:contact_person_list' %}" class="nav-link {% if 'contact-persons' in request.path %}active{% endif %}">
+                        <i class="nav-icon fas fa-user-friends"></i>
+                        <span>Contact Persons</span>
+                    </a>
+                    {% endif %}
+
                     <span class="nav-section-title">System</span>
                     {% if request.user.is_superuser or request.user|has_role:"Super Admin" %}
                     <a href="{% url 'settings_app:settings_dashboard' %}" class="nav-link {% if 'settings' in request.path %}active{% endif %}">

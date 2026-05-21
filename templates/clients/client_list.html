@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static accounts_tags %}
+{% block page_title %}Clients{% endblock %}
+{% block page_subtitle %}Manage client companies and their contact persons{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title">
+                    <i class="fas fa-building me-2 text-primary"></i>
+                    Client Management
+                </h5>
+                {% if request.user|has_role:"Super Admin" or request.user|has_role:"Admin" %}
+                <a href="{% url 'clients:client_create' %}" class="btn btn-primary btn-sm ms-auto">
+                    <i class="fas fa-plus me-2"></i>
+                    Add Client
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex gap-2">
+                        <select class="form-select form-select-sm" id="statusFilter" style="width: 150px;">
+                            <option value="">All Status</option>
+                            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                            <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="clientsTable" class="table table-hover align-middle mb-0" data-ajax-url="{% url 'clients_datatable' %}">
+                        <thead>
+                        <tr>
+                            <th style="width:5%">#</th>
+                            <th>Company Name</th>
+                            <th>Registration No</th>
+                            <th>Contact</th>
+                            <th style="width:10%">Status</th>
+                            <th style="width:12%">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteClientModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger bg-opacity-10">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Delete Client</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete client <strong id="deleteClientName"></strong>?</p>
+                <p>This will only hide the client from active lists; existing records will not be affected.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteClientForm" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete Client
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    var table = $('#clientsTable').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: $('#clientsTable').data('ajax-url'),
+            data: function(d) {
+                d.status = $('#statusFilter').val();
+            }
+        },
+        columns: [
+            { data: 'id' },
+            { data: 'company_name' },
+            { data: 'registration_no' },
+            { data: 'email' },
+            { data: 'status', orderable: false },
+            { data: null, orderable: false, render: function(data, type, row) {
+                var actions = '<div class="d-flex gap-1">';
+                actions += '<a href="/clients/' + row.id + '/" class="btn btn-outline-info btn-sm"><i class="fas fa-eye"></i></a>';
+                {% if request.user|has_role:"Super Admin" or request.user|has_role:"Admin" %}
+                actions += '<a href="/clients/' + row.id + '/update/" class="btn btn-outline-warning btn-sm"><i class="fas fa-edit"></i></a>';
+                {% endif %}
+                {% if request.user|has_role:"Super Admin" %}
+                actions += '<button type="button" class="btn btn-outline-danger btn-sm delete-client" data-id="' + row.id + '" data-name="' + row.company_name + '"><i class="fas fa-trash"></i></button>';
+                {% endif %}
+                actions += '</div>';
+                return actions;
+            }}
+        ],
+        order: [[0, 'desc']],
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50], [10, 25, 50]],
+    });
+
+    $('#statusFilter').on('change', function() {
+        table.ajax.reload();
+    });
+
+    $(document).on('click', '.delete-client', function() {
+        var id = $(this).data('id');
+        var name = $(this).data('name');
+        $('#deleteClientName').text(name);
+        $('#deleteClientForm').attr('action', '/clients/' + id + '/delete/');
+        $('#deleteClientModal').modal('show');
+    });
+});
+</script>
+{% endblock %}

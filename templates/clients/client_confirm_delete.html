@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block page_title %}Delete Client{% endblock %}
+{% block page_subtitle %}Confirm deletion of client "{{ object.company_name }}"{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-danger bg-opacity-10">
+                <h5 class="card-title mb-0 text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Delete Client
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">Are you sure you want to delete client <strong>{{ object.company_name }}</strong>?</p>
+                <p class="text-warning"><i class="fas fa-info-circle me-1"></i>This will only hide the client from active lists; existing records will not be affected.</p>
+            </div>
+            <div class="card-footer bg-transparent border-top">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'clients:client_detail' object.pk %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-1"></i>Delete Client
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

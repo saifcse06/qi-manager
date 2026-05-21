@@ -12,6 +12,7 @@ from accounts.views import (
     UserDatatableView, RoleDatatableView, PermissionDatatableView,
     LoadRolesView, LoadPermissionsView,
 )
+from clients.views import ClientDatatableView, ClientContactPersonDatatableView
 
 urlpatterns = [
     # Admin site
@@ -47,6 +48,11 @@ urlpatterns = [
     path('ajax/users-datatable/', UserDatatableView.as_view(), name='users_datatable'),
     path('ajax/roles-datatable/', RoleDatatableView.as_view(), name='roles_datatable'),
     path('ajax/permissions-datatable/', PermissionDatatableView.as_view(), name='permissions_datatable'),
+    path('ajax/clients-datatable/', ClientDatatableView.as_view(), name='clients_datatable'),
+    path('ajax/contact-persons-datatable/', ClientContactPersonDatatableView.as_view(), name='contact_persons_datatable'),
+
+    # Client Management URLs
+    path('clients/', include('clients.urls', namespace='clients')),
 
     # System Settings URLs
     path('settings/', include('settings_app.urls', namespace='settings_app')),
