@@ -51,9 +51,12 @@ urlpatterns = [
     path('ajax/clients-datatable/', ClientDatatableView.as_view(), name='clients_datatable'),
     path('ajax/contact-persons-datatable/', ClientContactPersonDatatableView.as_view(), name='contact_persons_datatable'),
 
-    # Client Management URLs
+# Client Management URLs
     path('clients/', include('clients.urls', namespace='clients')),
-
+    
+    # Products Management URLs
+    path('products/', include('products.urls', namespace='products')),
+    
     # System Settings URLs
     path('settings/', include('settings_app.urls', namespace='settings_app')),
 

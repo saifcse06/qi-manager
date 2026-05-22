@@ -37,6 +37,9 @@ INSTALLED_APPS = [
 
     # Client Management App
     'clients',
+    
+    # Products Management App
+    'products',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

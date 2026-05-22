@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load static accounts_tags %}
+
+{% block title %}Delete Category - QI Manager{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <h2>Delete Category</h2>
+        <a href="{% url 'products:category_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <h4 class="alert-heading">Are you sure you want to deactivate this category?</h4>
+            <p>This action will deactivate the category. Existing products under this category will remain unaffected, but you won't be able to assign this category to new products.</p>
+            <hr>
+            <div class="mb-3">
+                <strong>Category:</strong> {{ category.name }}
+            </div>
+            <div class="mb-3">
+                <strong>Description:</strong> {{ category.description|default:"Not provided" }}
+            </div>
+            <div class="mb-3">
+                <strong>Associated Products:</strong> {{ category.products.count }} product(s)
+            </div>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="{% url 'products:category_list' %}" class="btn btn-outline-secondary me-2">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Deactivate Category
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

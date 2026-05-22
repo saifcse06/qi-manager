@@ -48,28 +48,40 @@
                         <span>Dashboard</span>
                     </a>
 
-                    <span class="nav-section-title">RBAC Management</span>
-                    {% if request.user.is_superuser or request.user|has_role:"Super Admin" or request.user|has_role:"Admin" %}
-                    <a href="{% url 'user_list' %}" class="nav-link {% if 'users' in request.path and 'permission' not in request.path and 'role' not in request.path %}active{% endif %}">
-                        <i class="nav-icon fas fa-users"></i>
-                        <span>Users</span>
-                        {% with count=user_count %}{% if count %}<span class="nav-badge">{{ count }}</span>{% endif %}{% endwith %}
-                    </a>
-                    <a href="{% url 'role_list' %}" class="nav-link {% if 'roles' in request.path %}active{% endif %}">
-                        <i class="nav-icon fas fa-user-shield"></i>
-                        <span>Roles</span>
-                        {% with count=role_count %}{% if count %}<span class="nav-badge">{{ count }}</span>{% endif %}{% endwith %}
-                    </a>
-                    {% if request.user.is_superuser or request.user|has_permission:"accounts.view_permission" %}
-                    <a href="{% url 'permission_list' %}" class="nav-link {% if 'permissions' in request.path %}active{% endif %}">
-                        <i class="nav-icon fas fa-lock"></i>
-                        <span>Permissions</span>
-                        {% with count=permission_count %}{% if count %}<span class="nav-badge">{{ count }}</span>{% endif %}{% endwith %}
-                    </a>
-                    {% endif %}
-                    {% endif %}
+<span class="nav-section-title">RBAC Management</span>
+                     {% if request.user.is_superuser or request.user|has_role:"Super Admin" or request.user|has_role:"Admin" %}
+                     <a href="{% url 'user_list' %}" class="nav-link {% if 'users' in request.path and 'permission' not in request.path and 'role' not in request.path %}active{% endif %}">
+                         <i class="nav-icon fas fa-users"></i>
+                         <span>Users</span>
+                         {% with count=user_count %}{% if count %}<span class="nav-badge">{{ count }}</span>{% endif %}{% endwith %}
+                     </a>
+                     <a href="{% url 'role_list' %}" class="nav-link {% if 'roles' in request.path %}active{% endif %}">
+                         <i class="nav-icon fas fa-user-shield"></i>
+                         <span>Roles</span>
+                         {% with count=role_count %}{% if count %}<span class="nav-badge">{{ count }}</span>{% endif %}{% endwith %}
+                     </a>
+                     {% if request.user.is_superuser or request.user|has_permission:"accounts.view_permission" %}
+                     <a href="{% url 'permission_list' %}" class="nav-link {% if 'permissions' in request.path %}active{% endif %}">
+                         <i class="nav-icon fas fa-lock"></i>
+                         <span>Permissions</span>
+                         {% with count=permission_count %}{% if count %}<span class="nav-badge">{{ count }}</span>{% endif %}{% endwith %}
+                     </a>
+                     {% endif %}
+                     {% endif %}
 
-<span class="nav-section-title">Client Management</span>
+                     <span class="nav-section-title">Product & Service Management</span>
+                     {% if request.user.is_superuser or request.user|has_permission:"products.view_product" %}
+                     <a href="{% url 'products:product_list' %}" class="nav-link {% if 'products' in request.path %}active{% endif %}">
+                         <i class="nav-icon fas fa-box-open"></i>
+                         <span>Products & Services</span>
+                     </a>
+                     <a href="{% url 'products:category_list' %}" class="nav-link {% if 'categories' in request.path %}active{% endif %}">
+                         <i class="nav-icon fas fa-tags"></i>
+                         <span>Categories</span>
+                     </a>
+                     {% endif %}
+
+                     <span class="nav-section-title">Client Management</span>
                      {% if request.user.is_superuser or request.user|has_permission:"clients.view_client" %}
                      <a href="{% url 'clients:client_list' %}" class="nav-link {% if request.path == '/clients/' %}active{% endif %}">
                          <i class="nav-icon fas fa-building"></i>

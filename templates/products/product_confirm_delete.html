@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static accounts_tags %}
+
+{% block title %}Delete Product - QI Manager{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <h2>Delete Product</h2>
+        <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="alert alert-danger">
+            <h4 class="alert-heading">Are you sure you want to delete this product?</h4>
+            <p>This action will move the product to trash. Deleted products can be restored if needed.</p>
+            <hr>
+            <div class="mb-3">
+                <strong>Product:</strong> {{ product.name }}
+            </div>
+            <div class="mb-3">
+                <strong>Category:</strong> {{ product.category.name }}
+            </div>
+            <div class="mb-3">
+                <strong>Type:</strong> {{ product.get_product_type_display }}
+            </div>
+            <div class="mb-3">
+                <strong>SKU:</strong> {{ product.sku|default:"Not assigned" }}
+            </div>
+            <div class="mb-3">
+                <strong>Unit Price:</strong> ${{ product.unit_price }}
+            </div>
+            <div class="mb-3">
+                <strong>Status:</strong> {{ product.get_status_display }}
+            </div>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary me-2">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Delete Product
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
