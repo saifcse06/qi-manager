@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Quotation PDF: {{ quotation.quotation_number }}{% endblock %}
+
+{% block content %}
+<style>
+    .pdf-container {
+        width: 210mm;
+        margin: 0 auto;
+        padding: 20mm;
+        background-color: white;
+    }
+    .pdf-header {
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 2px solid #333;
+        padding-bottom: 10px;
+    }
+    .pdf-header img {
+        max-height: 60px;
+        margin-bottom: 10px;
+    }
+    .pdf-header h1 {
+        color: #333;
+        margin: 0;
+        font-size: 24px;
+    }
+    .pdf-header .quotation-number {
+        font-size: 18px;
+        color: #666;
+        margin-top: 5px;
+    }
+    .pdf-info {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+    }
+    .pdf-info div {
+        width: 48%;
+    }
+    .pdf-info h3 {
+        margin-top: 0;
+        color: #333;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 5px;
+    }
+    .pdf-info p {
+        margin: 5px 0;
+        line-height: 1.4;
+    }
+    .pdf-items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 30px;
+    }
+    .pdf-items-table th,
+    .pdf-items-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    .pdf-items-table th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+    }
+    .pdf-items-table tfoot td {
+        font-weight: bold;
+        border-top: 2px solid #333;
+    }
+    .pdf-totals {
+        margin-bottom: 30px;
+        text-align: right;
+    }
+    .pdf-totals div {
+        margin: 5px 0;
+        font-size: 16px;
+    }
+    .pdf-totals .total-amount {
+        font-size: 20px;
+        font-weight: bold;
+        border-top: 2px solid #333;
+        padding-top: 10px;
+    }
+    .pdf-footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #ddd;
+        text-align: center;
+        font-size: 12px;
+        color: #666;
+    }
+    .pdf-footer .signature {
+        margin-top: 30px;
+    }
+    .pdf-footer .signature div {
+        display: inline-block;
+        width: 120px;
+        border-top: 1px solid #333;
+        margin: 0 20px;
+        text-align: center;
+    }
+    @media print {
+        .pdf-container {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    }
+</style>
+
+<div class="pdf-container">
+    <div class="pdf-header">
+        {% if settings.company_logo %}
+        <img src="{{ settings.company_logo.url }}" alt="Company Logo">
+        {% endif %}
+        <h1>QUOTATION</h1>
+        <div class="quotation-number">{{ quotation.quotation_number }}</div>
+    </div>
+    
+    <div class="pdf-info">
+        <div>
+            <h3>Bill To:</h3>
+            <p><strong>{{ quotation.client.company_name }}</strong></p>
+            {% if quotation.client.address %}
+            <p>{{ quotation.client.address|linebreaks }}</p>
+            {% endif %}
+            {% if quotation.client.email %}
+            <p>Email: {{ quotation.client.email }}</p>
+            {% endif %}
+            {% if quotation.client.phone %}
+            <p>Phone: {{ quotation.client.phone }}</p>
+            {% endif %}
+        </div>
+        <div>
+            <h3>Contact Person:</h3>
+            <p><strong>
+                {% if quotation.contact_person %}
+                    {{ quotation.contact_person.person_name }}
+                {% else %}
+                    Not Specified
+                {% endif %}
+            </strong></p>
+            {% if quotation.contact_person and quotation.contact_person.email %}
+            <p>Email: {{ quotation.contact_person.email }}</p>
+            {% endif %}
+            {% if quotation.contact_person and quotation.contact_person.mobile_number %}
+            <p>Mobile: {{ quotation.contact_person.mobile_number }}</p>
+            {% endif %}
+            <p>Date: {{ quotation.created_at|date:"F d, Y" }}</p>
+            <p>Valid Until: {{ quotation.created_at|date:"F d, Y" }} (30 days)</p>
+        </div>
+    </div>
+    
+    <div>
+        <h3>Items</h3>
+        <table class="pdf-items-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Item Description</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                    <th>Discount</th>
+                    <th>Tax</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        <strong>{{ item.product.name }}</strong>
+                        {% if item.description %}
+                            <br><small>{{ item.description }}</small>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.quantity|floatformat:2 }}</td>
+                    <td>${{ item.unit_price|floatformat:2 }}</td>
+                    <td>{{ item.discount_percentage|floatformat:2 }}%</td>
+                    <td>{{ item.tax_percentage|floatformat:2 }}%</td>
+                    <td>${{ item.total_price|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="6" class="text-end"><strong>Subtotal:</strong></td>
+                    <td>${{ quotation.subtotal|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <td colspan="6" class="text-end"><strong>Discount (-):</strong></td>
+                    <td>-${{ quotation.discount_amount|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <td colspan="6" class="text-end"><strong>Tax (+):</strong></td>
+                    <td>+${{ quotation.tax_amount|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <td colspan="6" class="text-end"><strong>TOTAL:</strong></td>
+                    <td>${{ quotation.total_amount|floatformat:2 }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    
+    {% if quotation.notes %}
+    <div>
+        <h3>Notes</h3>
+        <p>{{ quotation.notes|linebreaks }}</p>
+    </div>
+    {% endif %}
+    
+    {% if quotation.terms_conditions %}
+    <div>
+        <h3>Terms & Conditions</h3>
+        <p>{{ quotation.terms_conditions|linebreaks }}</p>
+    </div>
+    {% endif %}
+    
+    <div class="pdf-footer">
+        <p>Thank you for your business!</p>
+        {% if settings.company_address or settings.company_phone or settings.company_email %}
+        <p>
+            {% if settings.company_address %}
+            {{ settings.company_address|linebreaks }}
+            {% endif %}
+            {% if settings.company_phone %}Phone: {{ settings.company_phone }}{% endif %}
+            {% if settings.company_email %} | Email: {{ settings.company_email }}{% endif %}
+        </p>
+        {% endif %}
+        
+        <div class="signature">
+            {% if settings.company_signature %}
+            <img src="{{ settings.company_signature.url }}" alt="Company Signature" style="max-height: 40px;">
+            {% endif %}
+            <div>Authorized Signatory</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

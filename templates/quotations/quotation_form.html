@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Edit Quotation{% else %}Create Quotation{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% if object %}Edit Quotation{% else %}Create New Quotation{% endif %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.client.id_for_label }}" class="form-label">Client*</label>
+                                {{ form.client }}
+                                {% if form.client.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.client.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.contact_person.id_for_label }}" class="form-label">Contact Person</label>
+                                {{ form.contact_person }}
+                                {% if form.contact_person.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.contact_person.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.status.id_for_label }}" class="form-label">Status*</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.status.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.discount_amount.id_for_label }}" class="form-label">Discount Amount ($)</label>
+                                {{ form.discount_amount }}
+                                {% if form.discount_amount.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.discount_amount.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.tax_amount.id_for_label }}" class="form-label">Tax Amount ($)</label>
+                                {{ form.tax_amount }}
+                                {% if form.tax_amount.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.tax_amount.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.notes.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.terms_conditions.id_for_label }}" class="form-label">Terms & Conditions</label>
+                            {{ form.terms_conditions }}
+                            {% if form.terms_conditions.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.terms_conditions.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mt-4">
+                            <a href="{% url 'quotations:quotation_list' %}" class="btn btn-outline-secondary me-2">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if object %}Update Quotation{% else %}Create Quotation{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Update contact persons when client changes
+        const clientSelect = document.getElementById('id_client');
+        const contactPersonSelect = document.getElementById('id_contact_person');
+        
+        if (clientSelect && contactPersonSelect) {
+            clientSelect.addEventListener('change', function() {
+                const clientId = this.value;
+                if (clientId) {
+                    // Fetch contact persons for selected client
+                    fetch(`/ajax/load-contact-persons/?client=${clientId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            // Clear existing options
+                            contactPersonSelect.innerHTML = '<option value="">---------</option>';
+                            
+                            // Add new options
+                            data.forEach(function(contactPerson) {
+                                const option = document.createElement('option');
+                                option.value = contactPerson.id;
+                                option.textContent = contactPerson.person_name;
+                                contactPersonSelect.appendChild(option);
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error loading contact persons:', error);
+                        });
+                } else {
+                    // Reset to empty if no client selected
+                    contactPersonSelect.innerHTML = '<option value="">---------</option>';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

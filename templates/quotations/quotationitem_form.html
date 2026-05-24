@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Edit Quotation Item{% else %}Add Quotation Item{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% if object %}Edit Quotation Item{% else %}Add Quotation Item{% endif %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.product.id_for_label }}" class="form-label">Product*</label>
+                                {{ form.product }}
+                                {% if form.product.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.product.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.description.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="{{ form.quantity.id_for_label }}" class="form-label">Quantity*</label>
+                                {{ form.quantity }}
+                                {% if form.quantity.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.quantity.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.unit_price.id_for_label }}" class="form-label">Unit Price ($)*</label>
+                                {{ form.unit_price }}
+                                {% if form.unit_price.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.unit_price.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.discount_percentage.id_for_label }}" class="form-label">Discount (%)</label>
+                                {{ form.discount_percentage }}
+                                {% if form.discount_percentage.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.discount_percentage.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.tax_percentage.id_for_label }}" class="form-label">Tax (%)</label>
+                                {{ form.tax_percentage }}
+                                {% if form.tax_percentage.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.tax_percentage.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="applyProductTax" checked>
+                                    <label class="form-check-label" for="applyProductTax">
+                                        Apply product's default tax rate
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <a href="{% url 'quotations:quotation_detail' quotation.pk %}" class="btn btn-outline-secondary me-2">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if object %}Update Item{% else %}Add Item{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Apply product's default tax rate when checkbox is checked
+        const productSelect = document.getElementById('id_product');
+        const taxPercentageInput = document.getElementById('id_tax_percentage');
+        const applyProductTaxCheckbox = document.getElementById('applyProductTax');
+        
+        if (productSelect && taxPercentageInput && applyProductTaxCheckbox) {
+            // Set initial state
+            const selectedProductOption = productSelect.options[productSelect.selectedIndex];
+            const defaultTaxRate = selectedProductOption?.getAttribute('data-tax-rate') || 0;
+            if (applyProductTaxCheckbox.checked) {
+                taxPercentageInput.value = defaultTaxRate;
+            }
+            
+            // Update when product changes
+            productSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const defaultTaxRate = selectedOption?.getAttribute('data-tax-rate') || 0;
+                if (applyProductTaxCheckbox.checked) {
+                    taxPercentageInput.value = defaultTaxRate;
+                }
+            });
+            
+            // Update when checkbox changes
+            applyProductTaxCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    const selectedOption = productSelect.options[productSelect.selectedIndex];
+                    const defaultTaxRate = selectedOption?.getAttribute('data-tax-rate') || 0;
+                    taxPercentageInput.value = defaultTaxRate;
+                }
+            });
+        }
+        
+        // Calculate total price when quantity, unit price, discount, or tax changes
+        function calculateTotalPrice() {
+            const quantity = parseFloat(document.getElementById('id_quantity').value) || 0;
+            const unitPrice = parseFloat(document.getElementById('id_unit_price').value) || 0;
+            const discountPercent = parseFloat(document.getElementById('id_discount_percentage').value) || 0;
+            const taxPercent = parseFloat(document.getElementById('id_tax_percentage').value) || 0;
+            
+            const discountedPrice = unitPrice * (1 - discountPercent / 100);
+            const taxAmount = discountedPrice * taxPercent / 100;
+            const totalPrice = (discountedPrice + taxAmount) * quantity;
+            
+            // Display calculated total (for reference)
+            const totalPriceDisplay = document.getElementById('totalPriceDisplay');
+            if (totalPriceDisplay) {
+                totalPriceDisplay.textContent = `$${totalPrice.toFixed(2)}`;
+            }
+        }
+        
+        const inputs = ['id_quantity', 'id_unit_price', 'id_discount_percentage', 'id_tax_percentage'];
+        inputs.forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('input', calculateTotalPrice);
+            }
+        });
+        
+        // Initial calculation
+        calculateTotalPrice();
+    });
+</script>
+{% endblock %}

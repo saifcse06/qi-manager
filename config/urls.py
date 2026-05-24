@@ -53,10 +53,13 @@ urlpatterns = [
 
 # Client Management URLs
     path('clients/', include('clients.urls', namespace='clients')),
-    
+     
     # Products Management URLs
     path('products/', include('products.urls', namespace='products')),
-    
+     
+    # Quotation Management URLs
+    path('quotations/', include('quotations.urls', namespace='quotations')),
+     
     # System Settings URLs
     path('settings/', include('settings_app.urls', namespace='settings_app')),
 

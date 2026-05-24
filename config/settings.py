@@ -40,6 +40,9 @@ INSTALLED_APPS = [
     
     # Products Management App
     'products',
+
+    # Quotation Management App
+    'quotations',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

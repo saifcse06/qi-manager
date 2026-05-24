@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Delete Quotation{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Delete Quotation</h5>
+                </div>
+                <div class="card-body">
+                    <p>Are you sure you want to delete the quotation "<strong>{{ object.quotation_number }}</strong>"?</p>
+                    <p><strong>Client:</strong> {{ object.client.company_name }}</p>
+                    <p><strong>Status:</strong> {{ object.get_status_display }}</p>
+                    <p><strong>Total Amount:</strong> ${{ object.total_amount|floatformat:2 }}</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mt-4">
+                            <a href="{% url 'quotations:quotation_detail' object.pk %}" class="btn btn-outline-secondary me-2">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-1"></i> Delete Quotation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -363,3 +363,22 @@ class ClientDatatableView(LoginRequiredMixin, RoleRequiredMixin, PermissionRequi
             'recordsFiltered': filtered_count,
             'data': data,
         }, status=200)
+
+
+class LoadContactPersonsView(LoginRequiredMixin, RoleRequiredMixin, PermissionRequiredMixin, View):
+    required_roles = ['Super Admin', 'Admin']
+    required_permission = 'clients.view_clientcontactperson'
+
+    def get(self, request):
+        client_id = request.GET.get('client')
+        if client_id:
+            contact_persons = ClientContactPerson.objects.filter(
+                client_id=client_id, 
+                is_deleted=False
+            ).values('id', 'person_name')
+        else:
+            contact_persons = []
+        
+        return JsonResponse({
+            'contact_persons': list(contact_persons)
+        })

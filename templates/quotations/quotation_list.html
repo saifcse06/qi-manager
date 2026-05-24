@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Quotation Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Quotation List</h5>
+                    <a href="{% url 'quotations:quotation_create' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i> New Quotation
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Quotation Number</th>
+                                    <th>Client</th>
+                                    <th>Contact Person</th>
+                                    <th>Status</th>
+                                    <th>Subtotal</th>
+                                    <th>Discount</th>
+                                    <th>Tax</th>
+                                    <th>Total Amount</th>
+                                    <th>Created Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for quotation in quotations %}
+                                <tr>
+                                    <td><a href="{% url 'quotations:quotation_detail' quotation.pk %}" class="text-decoration-none">{{ quotation.quotation_number }}</a></td>
+                                    <td>{{ quotation.client.company_name }}</td>
+                                    <td>
+                                        {% if quotation.contact_person %}
+                                            {{ quotation.contact_person.person_name }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{% if quotation.status == 'draft' %}secondary{% elif quotation.status == 'sent' %}info{% elif quotation.status == 'approved' %}success{% elif quotation.status == 'rejected' %}danger{% elif quotation.status == 'converted' %}warning{% else %}dark{% endif %}">
+                                            {{ quotation.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ quotation.subtotal|floatformat:2 }}</td>
+                                    <td>{{ quotation.discount_amount|floatformat:2 }}</td>
+                                    <td>{{ quotation.tax_amount|floatformat:2 }}</td>
+                                    <td>{{ quotation.total_amount|floatformat:2 }}</td>
+                                    <td>{{ quotation.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{% url 'quotations:quotation_detail' quotation.pk %}" class="btn btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'quotations:quotation_update' quotation.pk %}" class="btn btn-outline-success">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'quotations:quotation_delete' quotation.pk %}" class="btn btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="10" class="text-center py-4">No quotations found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

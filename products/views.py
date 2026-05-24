@@ -133,12 +133,23 @@ def product_list(request):
     # Get categories for filter dropdown
     categories = Category.objects.filter(is_active=True)
     
+    # Prepare products with tax rate for JSON use in quotations
+    products_with_tax = []
+    for product in Product.objects.filter(status='active', is_deleted=False):
+        products_with_tax.append({
+            'id': product.id,
+            'name': product.name,
+            'sku': product.sku or 'No SKU',
+            'tax_rate': float(product.tax_percentage)
+        })
+    
     context = {
         'page_obj': page_obj,
         'search_query': search_query,
         'product_type': product_type,
         'category_id': int(category_id) if category_id else None,
         'categories': categories,
+        'products_with_tax': products_with_tax,
     }
     return render(request, 'products/product_list.html', context)
 

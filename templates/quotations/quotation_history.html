@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Quotation History: {{ quotation.quotation_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Quotation History</h5>
+                    <a href="{% url 'quotations:quotation_detail' quotation.pk %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left"></i> Back to Quotation
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if history %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Action</th>
+                                    <th>Performed By</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in history %}
+                                <tr>
+                                    <td>{{ record.timestamp|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if record.action == 'create' %}primary{% elif record.action == 'update' %}info{% elif record.action == 'delete' %}danger{% elif record.action == 'email_sent' %}success{% elif record.action == 'status_change' %}warning{% else %}secondary{% endif %}">
+                                            {{ record.get_action_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if record.performed_by %}
+                                            {{ record.performed_by.get_full_name|default:record.performed_by.username }}
+                                        {% else %}
+                                            <span class="text-muted">System</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ record.description }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">No history records found for this quotation.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
