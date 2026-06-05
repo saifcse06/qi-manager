@@ -185,7 +185,13 @@
                     {% csrf_token %}
                     <div class="mb-3">
                         <label for="recipient_email" class="form-label">Recipient Email*</label>
-                        <input type="email" class="form-control" id="recipient_email" name="recipient_email" required>
+                        {% if quotation.contact_person and quotation.contact_person.email %}
+                            <input type="email" class="form-control" id="recipient_email" name="recipient_email" value="{{ quotation.contact_person.email }}" required>
+                        {% elif quotation.client.email %}
+                            <input type="email" class="form-control" id="recipient_email" name="recipient_email" value="{{ quotation.client.email }}" required>
+                        {% else %}
+                            <input type="email" class="form-control" id="recipient_email" name="recipient_email" required>
+                        {% endif %}
                         <div class="form-label">PDF will be automatically attached.</div>
                     </div>
                     <div class="mb-3">
@@ -200,7 +206,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" form="emailForm">Send Email</button>
+                <button type="submit" class="btn btn-primary" form="emailForm">Send Email</button>
             </div>
         </div>
     </div>

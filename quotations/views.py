@@ -502,11 +502,152 @@ class QuotationEmailView(LoginRequiredMixin, RoleRequiredMixin, PermissionRequir
     required_roles = ['Super Admin', 'Admin']
     required_permission = 'quotations.send_quotation'
 
+    def _generate_pdf(self, quotation):
+        """Generate PDF for quotation and return as bytes."""
+        from io import BytesIO
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib import colors
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import mm, inch
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
+        from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
+        from datetime import datetime
+        
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20*mm, leftMargin=20*mm, topMargin=20*mm, bottomGap=20*mm)
+        elements = []
+        
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=18,
+            spaceAfter=30,
+            alignment=TA_CENTER
+        )
+        
+        # Title
+        elements.append(Paragraph("QUOTATION", title_style))
+        elements.append(Spacer(1, 12))
+        
+        # Quotation number and date
+        data = [
+            ["Quotation Number:", quotation.quotation_number],
+            ["Date:", quotation.created_at.strftime("%B %d, %Y")],
+        ]
+        table = Table(data, colWidths=[50*mm, 100*mm])
+        table.setStyle(TableStyle([
+            ('FONTNAME', (0,0), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 10),
+            ('ALIGN', (0,0), (0,-1), 'LEFT'),
+            ('ALIGN', (1,0), (1,-1), 'LEFT'),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ]))
+        elements.append(table)
+        elements.append(Spacer(1, 20))
+        
+        # Bill To
+        elements.append(Paragraph("Bill To:", styles['Heading2']))
+        elements.append(Spacer(1, 6))
+        bill_to_data = [
+            [quotation.client.company_name],
+            [quotation.client.address or ''],
+            [f"Email: {quotation.client.email or ''}"],
+            [f"Phone: {quotation.client.phone or ''}"],
+        ]
+        bill_to_table = Table(bill_to_data, colWidths=[150*mm])
+        bill_to_table.setStyle(TableStyle([
+            ('FONTNAME', (0,0), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 9),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+        ]))
+        elements.append(bill_to_table)
+        elements.append(Spacer(1, 12))
+        
+        # Items table
+        elements.append(Paragraph("Items:", styles['Heading2']))
+        elements.append(Spacer(1, 6))
+        items_data = [["#", "Description", "Qty", "Unit Price", "Discount", "Tax", "Total"]]
+        for i, item in enumerate(quotation.items.all(), start=1):
+            items_data.append([
+                str(i),
+                f"{item.product.name}\n{item.description or ''}",
+                f"{item.quantity}",
+                f"${item.unit_price:.2f}",
+                f"{item.discount_percentage:.2f}%",
+                f"{item.tax_percentage:.2f}%",
+                f"${item.total_price:.2f}",
+            ])
+        items_table = Table(items_data, colWidths=[10*mm, 60*mm, 20*mm, 20*mm, 20*mm, 20*mm, 20*mm])
+        items_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.grey),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0,0), (-1,-1), 8),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+            ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ]))
+        elements.append(items_table)
+        elements.append(Spacer(1, 20))
+        
+        # Totals
+        elements.append(Paragraph("Totals:", styles['Heading2']))
+        elements.append(Spacer(1, 6))
+        totals_data = [
+            ["Subtotal:", f"${quotation.subtotal:.2f}"],
+            ["Discount:", f"-${quotation.discount_amount:.2f}"],
+            ["Tax:", f"+${quotation.tax_amount:.2f}"],
+            ["Total:", f"${quotation.total_amount:.2f}"],
+        ]
+        totals_table = Table(totals_data, colWidths=[100*mm, 50*mm])
+        totals_table.setStyle(TableStyle([
+            ('FONTNAME', (0,0), (-1,-1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0,0), (-1,-1), 10),
+            ('ALIGN', (0,0), (0,-1), 'RIGHT'),
+            ('ALIGN', (1,0), (1,-1), 'LEFT'),
+            ('LINEABOVE', (0,3), (-1,3), 1, colors.black),
+        ]))
+        elements.append(totals_table)
+        elements.append(Spacer(1, 20))
+        
+        # Notes
+        if quotation.notes:
+            elements.append(Paragraph("Notes:", styles['Heading2']))
+            elements.append(Spacer(1, 6))
+            elements.append(Paragraph(quotation.notes, styles['Normal']))
+            elements.append(Spacer(1, 12))
+        
+        # Terms & Conditions
+        if quotation.terms_conditions:
+            elements.append(Paragraph("Terms & Conditions:", styles['Heading2']))
+            elements.append(Spacer(1, 6))
+            elements.append(Paragraph(quotation.terms_conditions, styles['Normal']))
+            elements.append(Spacer(1, 12))
+        
+        # Footer
+        elements.append(Spacer(1, 30))
+        elements.append(Paragraph("Thank you for your business!", styles['Normal']))
+        elements.append(Paragraph(f"Generated on {datetime.now().strftime('%B %d, %Y %H:%M:%S')}", styles['Normal']))
+        
+        doc.build(elements)
+        
+        pdf = buffer.getvalue()
+        buffer.close()
+        return pdf
+
     def post(self, request, pk):
         quotation = get_object_or_404(Quotation, pk=pk, is_deleted=False)
         
+        # Determine default recipient email (contact person > client)
+        default_recipient = ''
+        if quotation.contact_person and quotation.contact_person.email:
+            default_recipient = quotation.contact_person.email
+        elif quotation.client.email:
+            default_recipient = quotation.client.email
+        
         # Get email details from form
-        recipient_email = request.POST.get('recipient_email')
+        recipient_email = request.POST.get('recipient_email', default_recipient)
         subject = request.POST.get('subject', f'Quotation {quotation.quotation_number}')
         message = request.POST.get('message', '')
         
@@ -514,16 +655,17 @@ class QuotationEmailView(LoginRequiredMixin, RoleRequiredMixin, PermissionRequir
             messages.error(request, 'Recipient email is required.')
             return redirect('quotations:quotation_detail', pk=pk)
         
-        # Create email
+        # Generate PDF
+        pdf_content = self._generate_pdf(quotation)
+        
+        # Create email with PDF attachment
         email = EmailMessage(
             subject=subject,
             body=message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[recipient_email],
         )
-        
-        # Attach PDF (in a real implementation, we would generate and attach PDF)
-        # For now, we'll just send a placeholder
+        email.attach(f'quotation_{quotation.quotation_number}.pdf', pdf_content, 'application/pdf')
         
         try:
             email.send()
