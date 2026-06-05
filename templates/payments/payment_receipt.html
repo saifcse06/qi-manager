@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Payment Receipt - PAY-{{ payment.id|stringformat:"06d" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <a href="{% url 'payments:payment_detail' payment.pk %}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Back to Payment
+            </a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Payment Receipt - PAY-{{ payment.id|stringformat:"06d" }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p><strong>Invoice:</strong> <a href="{% url 'invoices:invoice_detail' payment.invoice.pk %}">{{ payment.invoice.invoice_number }}</a></p>
+                            <p><strong>Client:</strong> {{ payment.invoice.client.company_name }}</p>
+                            <p><strong>Payment Date:</strong> {{ payment.payment_date|date:"M d, Y" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Payment Method:</strong> {{ payment.payment_method_name }}</p>
+                            <p><strong>Reference Number:</strong> {{ payment.reference_number|default:"-" }}</p>
+                            <p><strong>Status:</strong> {{ payment.get_status_display }}</p>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered">
+                            <tbody>
+                                <tr>
+                                    <th class="w-50">Total Invoice Amount</th>
+                                    <td class="text-end">${{ payment.invoice.total_amount|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Total Paid</th>
+                                    <td class="text-end">${{ payment.invoice.paid_amount|floatformat:2 }}</td>
+                                </tr>
+                                <tr class="table-active">
+                                    <th>This Payment</th>
+                                    <td class="text-end fw-bold">${{ payment.amount|floatformat:2 }}</td>
+                                </tr>
+                                <tr class="table-warning">
+                                    <th>Balance Due</th>
+                                    <td class="text-end fw-bold">${{ payment.invoice.balance_due|floatformat:2 }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if payment.remarks %}
+                    <div class="mb-4">
+                        <strong>Remarks:</strong>
+                        <p class="mb-0">{{ payment.remarks }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'payments:payment_receipt_pdf' payment.pk %}" class="btn btn-dark me-md-2" target="_blank">
+                            <i class="fas fa-file-pdf me-1"></i> Download PDF
+                        </a>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#emailReceiptModal">
+                            <i class="fas fa-envelope me-1"></i> Email Receipt
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="emailReceiptModal" tabindex="-1" aria-labelledby="emailReceiptModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="emailReceiptModalLabel">Email Payment Receipt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'payments:payment_email' payment.pk %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="recipient_email" class="form-label">Recipient Email*</label>
+                        <input type="email" class="form-control" name="recipient_email" id="recipient_email"
+                               value="{% if payment.invoice.contact_person.email %}{{ payment.invoice.contact_person.email }}{% elif payment.invoice.client.email %}{{ payment.invoice.client.email }}{% endif %}">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Send Receipt</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

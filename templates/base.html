@@ -98,15 +98,23 @@
                      </a>
                      {% endif %}
 
-                     <span class="nav-section-title">Invoice Management</span>
-                     {% if request.user.is_superuser or request.user|has_permission:"invoices.view_invoice" %}
-                     <a href="{% url 'invoices:invoice_list' %}" class="nav-link {% if 'invoices' in request.path %}active{% endif %}">
-                         <i class="nav-icon fas fa-file-invoice-dollar"></i>
-                         <span>Invoices</span>
-                     </a>
-                     {% endif %}
+                      <span class="nav-section-title">Invoice Management</span>
+                      {% if request.user.is_superuser or request.user|has_permission:"invoices.view_invoice" %}
+                      <a href="{% url 'invoices:invoice_list' %}" class="nav-link {% if 'invoices' in request.path %}active{% endif %}">
+                          <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                          <span>Invoices</span>
+                      </a>
+                      {% endif %}
 
-                     <span class="nav-section-title">System</span>
+                      <span class="nav-section-title">Payment Management</span>
+                      {% if request.user.is_superuser or request.user|has_permission:"payments.view_payment" %}
+                      <a href="{% url 'payments:payment_list' %}" class="nav-link {% if 'payments' in request.path %}active{% endif %}">
+                          <i class="nav-icon fas fa-credit-card"></i>
+                          <span>Payments</span>
+                      </a>
+                      {% endif %}
+
+                      <span class="nav-section-title">System</span>
                      {% if request.user.is_superuser or request.user|has_role:"Super Admin" %}
                      <a href="{% url 'settings_app:settings_dashboard' %}" class="nav-link {% if 'settings' in request.path %}active{% endif %}">
                          <i class="nav-icon fas fa-cog"></i>

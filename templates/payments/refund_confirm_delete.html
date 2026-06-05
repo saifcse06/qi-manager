@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Delete Refund{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Delete Refund</h5>
+                </div>
+                <div class="card-body">
+                    <p>Are you sure you want to delete refund <strong>#{{ object.id }}</strong> for payment <strong>#{{ object.payment.id }}</strong>?</p>
+                    <p class="text-muted">Refund Amount: ${{ object.amount|floatformat:2 }} | Refund Date: {{ object.refund_date|date:"M d, Y" }}</p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <a href="{% url 'payments:payment_detail' object.payment.pk %}" class="btn btn-secondary me-2">Cancel</a>
+                        <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

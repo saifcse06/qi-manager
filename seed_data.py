@@ -73,6 +73,13 @@ def create_permissions():
         {'name': 'Can change invoice item', 'codename': 'invoices.change_invoiceitem', 'description': 'Can change invoice item'},
         {'name': 'Can delete invoice item', 'codename': 'invoices.delete_invoiceitem', 'description': 'Can delete invoice item'},
         {'name': 'Can view invoice history', 'codename': 'invoices.view_invoicehistory', 'description': 'Can view invoice history'},
+        # Payment permissions
+        {'name': 'Can view payment', 'codename': 'payments.view_payment', 'description': 'Can view payment'},
+        {'name': 'Can add payment', 'codename': 'payments.add_payment', 'description': 'Can add payment'},
+        {'name': 'Can change payment', 'codename': 'payments.change_payment', 'description': 'Can change payment'},
+        {'name': 'Can delete payment', 'codename': 'payments.delete_payment', 'description': 'Can delete payment'},
+        {'name': 'Can send payment receipt', 'codename': 'payments.send_payment_receipt', 'description': 'Can send payment receipt'},
+        {'name': 'Can view payment history', 'codename': 'payments.view_paymenthistory', 'description': 'Can view payment history'},
     ]
 
     created = []
@@ -126,6 +133,8 @@ def create_roles(all_permissions):
             'invoices.view_invoiceitem', 'invoices.add_invoiceitem', 'invoices.change_invoiceitem',
             'invoices.send_invoice', 'invoices.send_invoice_reminder',
             'invoices.view_invoicehistory',
+            'payments.view_payment', 'payments.add_payment', 'payments.change_payment',
+            'payments.view_paymenthistory',
         ]
     )
     admin_role, created = Role.objects.get_or_create(

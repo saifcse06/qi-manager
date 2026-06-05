@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Edit Payment{% else %}Record Payment{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% if object %}Edit Payment{% else %}Record New Payment{% endif %}</h5>
+                    {% if invoice %}
+                    <small class="text-muted">Invoice: {{ invoice.invoice_number }} | Client: {{ invoice.client.company_name }} | Balance Due: ${{ invoice.balance_due|floatformat:2 }}</small>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.invoice.id_for_label }}" class="form-label">Invoice*</label>
+                                {{ form.invoice }}
+                                {% if form.invoice.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.invoice.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.payment_method.id_for_label }}" class="form-label">Payment Method*</label>
+                                {{ form.payment_method }}
+                                {% if form.payment_method.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.payment_method.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.amount.id_for_label }}" class="form-label">Amount*</label>
+                                {{ form.amount }}
+                                {% if form.amount.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.amount.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.payment_date.id_for_label }}" class="form-label">Payment Date*</label>
+                                {{ form.payment_date }}
+                                {% if form.payment_date.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.payment_date.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.reference_number.id_for_label }}" class="form-label">Reference Number</label>
+                                {{ form.reference_number }}
+                                {% if form.reference_number.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.reference_number.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.status.id_for_label }}" class="form-label">Status*</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.status.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.remarks.id_for_label }}" class="form-label">Remarks</label>
+                            {{ form.remarks }}
+                            {% if form.remarks.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.remarks.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mt-4">
+                            <a href="{% url 'payments:payment_list' %}" class="btn btn-outline-secondary me-2">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if object %}Update Payment{% else %}Record Payment{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    });
+</script>
+{% endblock %}

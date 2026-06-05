@@ -63,6 +63,9 @@ urlpatterns = [
     # Invoice Management URLs
     path('invoices/', include('invoices.urls', namespace='invoices')),
      
+    # Payment Management URLs
+    path('payments/', include('payments.urls', namespace='payments')),
+     
     # System Settings URLs
     path('settings/', include('settings_app.urls', namespace='settings_app')),
 

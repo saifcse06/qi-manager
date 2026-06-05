@@ -46,6 +46,9 @@ INSTALLED_APPS = [
     
     # Invoice Management App
     'invoices',
+    
+    # Payment Management App
+    'payments',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
@@ -169,6 +172,7 @@ MIDDLEWARE_ROLE_MAP = {
     r'^/permissions/': ['Super Admin'],
     r'^/settings/': ['Super Admin'],
     r'^/clients/': ['Super Admin', 'Admin'],
+    r'^/payments/': ['Super Admin', 'Admin'],
 }
 
 MIDDLEWARE_EXEMPT_URLS = [

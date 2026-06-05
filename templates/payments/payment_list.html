@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Payments{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <a href="{% url 'payments:payment_list' %}" class="btn btn-outline-secondary btn-sm me-2">
+                <i class="fas fa-list me-1"></i> All Payments
+            </a>
+            <a href="{% url 'payments:payment_create' %}{% if invoice %}?invoice={{ invoice.pk }}{% endif %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-1"></i> Add Payment
+            </a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{% if invoice %}Payments for {{ invoice.invoice_number }}{% else %}Payment History{% endif %}</h5>
+                </div>
+                <div class="card-body">
+                    {% if invoice %}
+                    <div class="alert alert-info d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Invoice:</strong> {{ invoice.invoice_number }} |
+                            <strong>Total:</strong> ${{ invoice.total_amount|floatformat:2 }} |
+                            <strong>Paid:</strong> ${{ invoice.paid_amount|floatformat:2 }} |
+                            <strong>Balance Due:</strong> ${{ invoice.balance_due|floatformat:2 }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Date</th>
+                                    <th>{% if not invoice %}Invoice{% endif %}</th>
+                                    <th>Client</th>
+                                    <th>Method</th>
+                                    <th>Reference</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payments %}
+                                <tr>
+                                    <td>{{ payment.id }}</td>
+                                    <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                                    {% if not invoice %}
+                                    <td><a href="{% url 'invoices:invoice_detail' payment.invoice.pk %}" class="text-decoration-none">{{ payment.invoice.invoice_number }}</a></td>
+                                    {% endif %}
+                                    <td>{{ payment.invoice.client.company_name }}</td>
+                                    <td>{{ payment.payment_method_name }}</td>
+                                    <td>{{ payment.reference_number|default:"-" }}</td>
+                                    <td>${{ payment.amount|floatformat:2 }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if payment.status == 'completed' %}success{% elif payment.status == 'pending' %}warning{% elif payment.status == 'failed' %}danger{% elif payment.status == 'cancelled' %}secondary{% elif payment.status == 'refunded' %}info{% else %}dark{% endif %}">
+                                            {{ payment.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{% url 'payments:payment_detail' payment.pk %}" class="btn btn-outline-primary" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'payments:payment_receipt' payment.pk %}" class="btn btn-outline-info" title="Receipt">
+                                                <i class="fas fa-receipt"></i>
+                                            </a>
+                                            {% if payment.status == 'completed' %}
+                                            <a href="{% url 'payments:payment_refund_create' payment.pk %}" class="btn btn-outline-warning" title="Refund">
+                                                <i class="fas fa-rotate-left"></i>
+                                            </a>
+                                            {% endif %}
+                                            <a href="{% url 'payments:payment_update' payment.pk %}" class="btn btn-outline-success" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'payments:payment_delete' payment.pk %}" class="btn btn-outline-danger" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="{% if invoice %}8{% else %}9{% endif %}" class="text-center py-4">No payments found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if is_paginated %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&invoice={{ invoice_filter }}&method={{ method_filter }}&status={{ status_filter }}&date_from={{ date_from }}&date_to={{ date_to }}">Previous</a>
+                            </li>
+                            {% endif %}
+                            {% for num in page_obj.paginator.page_range %}
+                            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                <a class="page-link" href="?page={{ num }}&search={{ search_query }}&invoice={{ invoice_filter }}&method={{ method_filter }}&status={{ status_filter }}&date_from={{ date_from }}&date_to={{ date_to }}">{{ num }}</a>
+                            </li>
+                            {% endfor %}
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&invoice={{ invoice_filter }}&method={{ method_filter }}&status={{ status_filter }}&date_from={{ date_from }}&date_to={{ date_to }}">Next</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

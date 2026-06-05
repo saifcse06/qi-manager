@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Delete Payment{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Delete Payment</h5>
+                </div>
+                <div class="card-body">
+                    <p>Are you sure you want to delete payment <strong>#{{ object.id }}</strong> for invoice <strong>{{ object.invoice.invoice_number }}</strong>?</p>
+                    <p class="text-muted">Amount: ${{ object.amount|floatformat:2 }} | Date: {{ object.payment_date|date:"M d, Y" }}</p>
+                    <p class="text-danger"><strong>Warning:</strong> This action cannot be undone. The invoice status will be updated automatically.</p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <a href="{% url 'payments:payment_detail' object.pk %}" class="btn btn-secondary me-2">Cancel</a>
+                        <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
