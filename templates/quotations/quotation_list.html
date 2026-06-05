@@ -61,6 +61,11 @@
                                             <a href="{% url 'quotations:quotation_update' quotation.pk %}" class="btn btn-outline-success">
                                                 <i class="fas fa-edit"></i>
                                             </a>
+                                            {% if quotation.status == 'approved' and not quotation.invoices.exists %}
+                                            <a href="{% url 'invoices:invoice_convert' quotation.pk %}" class="btn btn-outline-warning" title="Convert to Invoice">
+                                                <i class="fas fa-file-invoice"></i>
+                                            </a>
+                                            {% endif %}
                                             <a href="{% url 'quotations:quotation_delete' quotation.pk %}" class="btn btn-outline-danger">
                                                 <i class="fas fa-trash"></i>
                                             </a>

@@ -15,6 +15,8 @@ from .models import Quotation, QuotationItem, QuotationHistory
 from clients.models import Client, ClientContactPerson
 from products.models import Product
 from .forms import QuotationForm, QuotationItemForm
+from settings_app.models import EmailTemplate, EmailConfiguration
+import json
 from datetime import datetime
 
 
@@ -233,7 +235,17 @@ class QuotationDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         context.update(_sidebar_context())
         context['items'] = self.object.items.all()
-        context['history'] = self.object.history.all()[:10]  # Last 10 history entries
+        context['history'] = self.object.history.all()[:10]
+        context['email_templates'] = EmailTemplate.objects.filter(is_active=True, template_type='quotation')
+        templates_list = []
+        for t in context['email_templates']:
+            templates_list.append({
+                'id': str(t.pk),
+                'name': t.get_template_type_display(),
+                'subject': t.subject,
+                'body': t.body,
+            })
+        context['email_templates_json'] = json.dumps(templates_list)
         return context
 
 
@@ -511,7 +523,6 @@ class QuotationEmailView(LoginRequiredMixin, RoleRequiredMixin, PermissionRequir
         from reportlab.lib.units import mm, inch
         from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
         from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
-        from datetime import datetime
         
         buffer = BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20*mm, leftMargin=20*mm, topMargin=20*mm, bottomGap=20*mm)
@@ -648,6 +659,7 @@ class QuotationEmailView(LoginRequiredMixin, RoleRequiredMixin, PermissionRequir
         
         # Get email details from form
         recipient_email = request.POST.get('recipient_email', default_recipient)
+        template_id = request.POST.get('template')
         subject = request.POST.get('subject', f'Quotation {quotation.quotation_number}')
         message = request.POST.get('message', '')
         
@@ -655,14 +667,43 @@ class QuotationEmailView(LoginRequiredMixin, RoleRequiredMixin, PermissionRequir
             messages.error(request, 'Recipient email is required.')
             return redirect('quotations:quotation_detail', pk=pk)
         
+        # Use template if selected
+        if template_id:
+            try:
+                template = EmailTemplate.objects.get(pk=template_id, template_type='quotation', is_active=True)
+                context = {
+                    'client_name': quotation.client.company_name if quotation.client else '',
+                    'invoice_number': '',
+                    'quotation_number': quotation.quotation_number,
+                    'due_amount': f"{quotation.total_amount:.2f}",
+                    'company_name': 'QI Manager',
+                    'signature': '',
+                }
+                result = template.subject
+                for key, value in context.items():
+                    result = result.replace(f'{{{{{key}}}}}', str(value))
+                subject = result
+                
+                result = template.body
+                for key, value in context.items():
+                    result = result.replace(f'{{{{{key}}}}}', str(value))
+                message = result
+            except EmailTemplate.DoesNotExist:
+                pass
+        
         # Generate PDF
         pdf_content = self._generate_pdf(quotation)
+        
+        email_config = EmailConfiguration.objects.first()
+        from_email = settings.DEFAULT_FROM_EMAIL
+        if email_config and email_config.default_sender_name:
+            from_email = f"{email_config.default_sender_name} <{from_email}>"
         
         # Create email with PDF attachment
         email = EmailMessage(
             subject=subject,
             body=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            from_email=from_email,
             to=[recipient_email],
         )
         email.attach(f'quotation_{quotation.quotation_number}.pdf', pdf_content, 'application/pdf')

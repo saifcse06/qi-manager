@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Edit Item{% else %}Add Item{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% if object %}Edit Item{% else %}Add New Item{% endif %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.product.id_for_label }}" class="form-label">Product*</label>
+                            {{ form.product }}
+                            {% if form.product.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.product.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.description.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="{{ form.quantity.id_for_label }}" class="form-label">Quantity*</label>
+                                {{ form.quantity }}
+                                {% if form.quantity.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.quantity.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.unit_price.id_for_label }}" class="form-label">Unit Price*</label>
+                                {{ form.unit_price }}
+                                {% if form.unit_price.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.unit_price.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.discount_percentage.id_for_label }}" class="form-label">Discount (%)</label>
+                                {{ form.discount_percentage }}
+                                {% if form.discount_percentage.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.discount_percentage.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.tax_percentage.id_for_label }}" class="form-label">Tax (%)</label>
+                            {{ form.tax_percentage }}
+                            {% if form.tax_percentage.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.tax_percentage.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mt-4">
+                            <a href="{% url 'invoices:invoice_detail' invoice.pk %}" class="btn btn-outline-secondary me-2">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if object %}Update Item{% else %}Add Item{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

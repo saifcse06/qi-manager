@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Confirm Delete Invoice Item{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Confirm Delete Invoice Item</h5>
+                </div>
+                <div class="card-body">
+                    <p>Are you sure you want to delete item <strong>{{ object.product.name }}</strong> from invoice <strong>{{ object.invoice.invoice_number }}</strong>?</p>
+                    <form method="post">
+                        {% csrf_token %}
+                        <a href="{% url 'invoices:invoice_detail' object.invoice.pk %}" class="btn btn-outline-secondary me-2">Cancel</a>
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

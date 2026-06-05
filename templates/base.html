@@ -53,18 +53,15 @@
                      <a href="{% url 'user_list' %}" class="nav-link {% if 'users' in request.path and 'permission' not in request.path and 'role' not in request.path %}active{% endif %}">
                          <i class="nav-icon fas fa-users"></i>
                          <span>Users</span>
-                         {% with count=user_count %}{% if count %}<span class="nav-badge">{{ count }}</span>{% endif %}{% endwith %}
                      </a>
                      <a href="{% url 'role_list' %}" class="nav-link {% if 'roles' in request.path %}active{% endif %}">
                          <i class="nav-icon fas fa-user-shield"></i>
                          <span>Roles</span>
-                         {% with count=role_count %}{% if count %}<span class="nav-badge">{{ count }}</span>{% endif %}{% endwith %}
                      </a>
                      {% if request.user.is_superuser or request.user|has_permission:"accounts.view_permission" %}
                      <a href="{% url 'permission_list' %}" class="nav-link {% if 'permissions' in request.path %}active{% endif %}">
                          <i class="nav-icon fas fa-lock"></i>
                          <span>Permissions</span>
-                         {% with count=permission_count %}{% if count %}<span class="nav-badge">{{ count }}</span>{% endif %}{% endwith %}
                      </a>
                      {% endif %}
                      {% endif %}
@@ -82,42 +79,50 @@
                      {% endif %}
 
 <span class="nav-section-title">Client Management</span>
-                      {% if request.user.is_superuser or request.user|has_permission:"clients.view_client" %}
-                      <a href="{% url 'clients:client_list' %}" class="nav-link {% if request.path == '/clients/' %}active{% endif %}">
-                          <i class="nav-icon fas fa-building"></i>
-                          <span>Clients</span>
-                      </a>
-                      <a href="{% url 'clients:contact_person_list' %}" class="nav-link {% if 'contact-persons' in request.path %}active{% endif %}">
-                          <i class="nav-icon fas fa-user-friends"></i>
-                          <span>Contact Persons</span>
-                      </a>
-                      {% endif %}
+                     {% if request.user.is_superuser or request.user|has_permission:"clients.view_client" %}
+                     <a href="{% url 'clients:client_list' %}" class="nav-link {% if request.path == '/clients/' %}active{% endif %}">
+                         <i class="nav-icon fas fa-building"></i>
+                         <span>Clients</span>
+                     </a>
+                     <a href="{% url 'clients:contact_person_list' %}" class="nav-link {% if 'contact-persons' in request.path %}active{% endif %}">
+                         <i class="nav-icon fas fa-user-friends"></i>
+                         <span>Contact Persons</span>
+                     </a>
+                     {% endif %}
 
-                      <span class="nav-section-title">Quotation Management</span>
-                      {% if request.user.is_superuser or request.user|has_permission:"view_quotation" %}
-                      <a href="{% url 'quotations:quotation_list' %}" class="nav-link {% if 'quotations' in request.path %}active{% endif %}">
-                          <i class="nav-icon fas fa-file-invoice"></i>
-                          <span>Quotations</span>
-                      </a>
-                      {% endif %}
+                     <span class="nav-section-title">Quotation Management</span>
+                     {% if request.user.is_superuser or request.user|has_permission:"quotations.view_quotation" %}
+                     <a href="{% url 'quotations:quotation_list' %}" class="nav-link {% if 'quotations' in request.path %}active{% endif %}">
+                         <i class="nav-icon fas fa-file-invoice"></i>
+                         <span>Quotations</span>
+                     </a>
+                     {% endif %}
 
-                    <span class="nav-section-title">System</span>
-                    {% if request.user.is_superuser or request.user|has_role:"Super Admin" %}
-                    <a href="{% url 'settings_app:settings_dashboard' %}" class="nav-link {% if 'settings' in request.path %}active{% endif %}">
-                        <i class="nav-icon fas fa-cog"></i>
-                        <span>System Settings</span>
-                    </a>
-                    {% endif %}
+                     <span class="nav-section-title">Invoice Management</span>
+                     {% if request.user.is_superuser or request.user|has_permission:"invoices.view_invoice" %}
+                     <a href="{% url 'invoices:invoice_list' %}" class="nav-link {% if 'invoices' in request.path %}active{% endif %}">
+                         <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                         <span>Invoices</span>
+                     </a>
+                     {% endif %}
 
-                    <span class="nav-section-title">Account</span>
-                    <a href="{% url 'profile' %}" class="nav-link {% if 'profile' in request.path %}active{% endif %}">
-                        <i class="nav-icon fas fa-user-gear"></i>
-                        <span>My Profile</span>
-                    </a>
-                    <a href="{% url 'logout' %}" class="nav-link text-danger">
-                        <i class="nav-icon fas fa-sign-out-alt"></i>
-                        <span>Sign Out</span>
-                    </a>
+                     <span class="nav-section-title">System</span>
+                     {% if request.user.is_superuser or request.user|has_role:"Super Admin" %}
+                     <a href="{% url 'settings_app:settings_dashboard' %}" class="nav-link {% if 'settings' in request.path %}active{% endif %}">
+                         <i class="nav-icon fas fa-cog"></i>
+                         <span>System Settings</span>
+                     </a>
+                     {% endif %}
+
+                     <span class="nav-section-title">Account</span>
+                     <a href="{% url 'profile' %}" class="nav-link {% if 'profile' in request.path %}active{% endif %}">
+                         <i class="nav-icon fas fa-user-gear"></i>
+                         <span>My Profile</span>
+                     </a>
+                     <a href="{% url 'logout' %}" class="nav-link text-danger">
+                         <i class="nav-icon fas fa-sign-out-alt"></i>
+                         <span>Sign Out</span>
+                     </a>
                 </nav>
             </div>
             <div class="sidebar-footer">

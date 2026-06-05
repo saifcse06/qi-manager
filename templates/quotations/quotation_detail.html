@@ -155,11 +155,17 @@
                             </a>
                         </div>
                         <div class="col-md-3">
-                            <!-- Button to trigger email modal -->
                             <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#emailModal">
                                 <i class="fas fa-envelope me-2"></i> Send Email
                             </button>
                         </div>
+                        {% if quotation.status == 'approved' and not quotation.invoices.exists %}
+                        <div class="col-md-3">
+                            <a href="{% url 'invoices:invoice_convert' quotation.pk %}" class="btn btn-outline-warning w-100">
+                                <i class="fas fa-file-invoice me-2"></i> Convert to Invoice
+                            </a>
+                        </div>
+                        {% endif %}
                         <div class="col-md-3">
                             <a href="{% url 'quotations:quotation_history' quotation.pk %}" class="btn btn-outline-secondary w-100">
                                 <i class="fas fa-history me-2"></i> View History
@@ -192,7 +198,17 @@
                         {% else %}
                             <input type="email" class="form-control" id="recipient_email" name="recipient_email" required>
                         {% endif %}
-                        <div class="form-label">PDF will be automatically attached.</div>
+                        <div class="form-text">PDF will be automatically attached.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="template" class="form-label">Email Template</label>
+                        <select class="form-select" id="template" name="template">
+                            <option value="">-- Select Template --</option>
+                            <option value="default">Default Template</option>
+                            {% for template in email_templates %}
+                                <option value="{{ template.pk }}">{{ template.get_template_type_display }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="subject" class="form-label">Subject</label>
@@ -215,10 +231,23 @@
 
 {% block extrajs %}
 <script>
-    // Form validation for email modal
-    document.getElementById('emailForm').addEventListener('submit', function(e) {
-        // You can add custom validation here if needed
-        // For now, we rely on HTML5 validation
-    });
+const emailTemplatesData = {{ email_templates_json|safe }};
+document.addEventListener('DOMContentLoaded', function() {
+    const templateSelect = document.getElementById('template');
+    const subjectInput = document.getElementById('subject');
+    const messageTextarea = document.getElementById('message');
+
+    if (templateSelect) {
+        templateSelect.addEventListener('change', function() {
+            if (this.value) {
+                const tpl = emailTemplatesData.find(t => t.id === this.value);
+                if (tpl) {
+                    subjectInput.value = tpl.subject;
+                    messageTextarea.value = tpl.body;
+                }
+            }
+        });
+    }
+});
 </script>
 {% endblock %}

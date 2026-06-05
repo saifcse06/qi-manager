@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Invoice History: {{ invoice.invoice_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Invoice History: {{ invoice.invoice_number }}</h5>
+                    <a href="{% url 'invoices:invoice_detail' invoice.pk %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Back to Invoice
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if history %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Action</th>
+                                    <th>Performed By</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in history %}
+                                <tr>
+                                    <td>{{ entry.timestamp|date:"M d, Y H:i:s" }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if entry.action == 'create' %}primary{% elif entry.action == 'update' %}info{% elif entry.action == 'delete' %}danger{% elif entry.action == 'email_sent' %}success{% elif entry.action == 'status_change' %}warning{% elif entry.action == 'payment_received' %}warning{% elif entry.action == 'converted_from_quotation' %}info{% else %}secondary{% endif %}">
+                                            {{ entry.get_action_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ entry.performed_by.get_full_name|default:entry.performed_by.username|default:"System" }}</td>
+                                    <td>{{ entry.description }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">No history entries found for this invoice.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

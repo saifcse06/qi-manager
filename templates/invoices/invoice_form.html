@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Edit Invoice{% else %}Create Invoice{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% if object %}Edit Invoice{% else %}Create New Invoice{% endif %}</h5>
+                    {% if source_quotation %}
+                    <small class="text-muted">Converting from Quotation: {{ source_quotation.quotation_number }}</small>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        {% if source_quotation %}
+                        <input type="hidden" name="quotation" value="{{ source_quotation.pk }}">
+                        {% else %}
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.quotation.id_for_label }}" class="form-label">Quotation (Optional)</label>
+                                {{ form.quotation }}
+                                {% if form.quotation.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.quotation.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.client.id_for_label }}" class="form-label">Client*</label>
+                                {{ form.client }}
+                                {% if form.client.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.client.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.contact_person.id_for_label }}" class="form-label">Contact Person</label>
+                                {{ form.contact_person }}
+                                {% if form.contact_person.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.contact_person.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.due_date.id_for_label }}" class="form-label">Due Date</label>
+                                {{ form.due_date }}
+                                {% if form.due_date.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.due_date.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.discount_amount.id_for_label }}" class="form-label">Discount Amount ($)</label>
+                                {{ form.discount_amount }}
+                                {% if form.discount_amount.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.discount_amount.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.tax_amount.id_for_label }}" class="form-label">Tax Amount ($)</label>
+                                {{ form.tax_amount }}
+                                {% if form.tax_amount.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.tax_amount.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.paid_amount.id_for_label }}" class="form-label">Paid Amount ($)</label>
+                                {{ form.paid_amount }}
+                                {% if form.paid_amount.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.paid_amount.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.notes.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.terms_conditions.id_for_label }}" class="form-label">Terms & Conditions</label>
+                            {{ form.terms_conditions }}
+                            {% if form.terms_conditions.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.terms_conditions.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mt-4">
+                            <a href="{% url 'invoices:invoice_list' %}" class="btn btn-outline-secondary me-2">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if object %}Update Invoice{% else %}Create Invoice{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const clientSelect = document.getElementById('id_client');
+        const contactPersonSelect = document.getElementById('id_contact_person');
+
+        if (clientSelect && contactPersonSelect) {
+            clientSelect.addEventListener('change', function () {
+                const clientId = this.value;
+
+                if (clientId) {
+                    fetch(`/clients/ajax/load-contact-persons/?client=${clientId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            contactPersonSelect.innerHTML = '<option value="">---------</option>';
+
+                            if (data.contact_persons && Array.isArray(data.contact_persons)) {
+                                data.contact_persons.forEach(function (contactPerson) {
+                                    const option = document.createElement('option');
+                                    option.value = contactPerson.id;
+                                    option.textContent = contactPerson.person_name;
+                                    contactPersonSelect.appendChild(option);
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error loading contact persons:', error);
+                        });
+                } else {
+                    contactPersonSelect.innerHTML = '<option value="">---------</option>';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

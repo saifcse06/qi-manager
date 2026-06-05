@@ -43,6 +43,9 @@ INSTALLED_APPS = [
 
     # Quotation Management App
     'quotations',
+    
+    # Invoice Management App
+    'invoices',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

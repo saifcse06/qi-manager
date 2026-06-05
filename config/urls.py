@@ -60,6 +60,9 @@ urlpatterns = [
     # Quotation Management URLs
     path('quotations/', include('quotations.urls', namespace='quotations')),
      
+    # Invoice Management URLs
+    path('invoices/', include('invoices.urls', namespace='invoices')),
+     
     # System Settings URLs
     path('settings/', include('settings_app.urls', namespace='settings_app')),
 

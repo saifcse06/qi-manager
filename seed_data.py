@@ -51,6 +51,28 @@ def create_permissions():
         {'name': 'Can add contact person', 'codename': 'clients.add_clientcontactperson', 'description': 'Can add contact person'},
         {'name': 'Can change contact person', 'codename': 'clients.change_clientcontactperson', 'description': 'Can change contact person'},
         {'name': 'Can delete contact person', 'codename': 'clients.delete_clientcontactperson', 'description': 'Can delete contact person'},
+        # Quotation permissions
+        {'name': 'Can view quotation', 'codename': 'quotations.view_quotation', 'description': 'Can view quotation'},
+        {'name': 'Can add quotation', 'codename': 'quotations.add_quotation', 'description': 'Can add quotation'},
+        {'name': 'Can change quotation', 'codename': 'quotations.change_quotation', 'description': 'Can change quotation'},
+        {'name': 'Can delete quotation', 'codename': 'quotations.delete_quotation', 'description': 'Can delete quotation'},
+        {'name': 'Can send quotation', 'codename': 'quotations.send_quotation', 'description': 'Can send quotation'},
+        {'name': 'Can view quotation item', 'codename': 'quotations.view_quotationitem', 'description': 'Can view quotation item'},
+        {'name': 'Can add quotation item', 'codename': 'quotations.add_quotationitem', 'description': 'Can add quotation item'},
+        {'name': 'Can change quotation item', 'codename': 'quotations.change_quotationitem', 'description': 'Can change quotation item'},
+        {'name': 'Can delete quotation item', 'codename': 'quotations.delete_quotationitem', 'description': 'Can delete quotation item'},
+        # Invoice permissions
+        {'name': 'Can view invoice', 'codename': 'invoices.view_invoice', 'description': 'Can view invoice'},
+        {'name': 'Can add invoice', 'codename': 'invoices.add_invoice', 'description': 'Can add invoice'},
+        {'name': 'Can change invoice', 'codename': 'invoices.change_invoice', 'description': 'Can change invoice'},
+        {'name': 'Can delete invoice', 'codename': 'invoices.delete_invoice', 'description': 'Can delete invoice'},
+        {'name': 'Can send invoice', 'codename': 'invoices.send_invoice', 'description': 'Can send invoice'},
+        {'name': 'Can send invoice reminder', 'codename': 'invoices.send_invoice_reminder', 'description': 'Can send invoice reminder'},
+        {'name': 'Can view invoice item', 'codename': 'invoices.view_invoiceitem', 'description': 'Can view invoice item'},
+        {'name': 'Can add invoice item', 'codename': 'invoices.add_invoiceitem', 'description': 'Can add invoice item'},
+        {'name': 'Can change invoice item', 'codename': 'invoices.change_invoiceitem', 'description': 'Can change invoice item'},
+        {'name': 'Can delete invoice item', 'codename': 'invoices.delete_invoiceitem', 'description': 'Can delete invoice item'},
+        {'name': 'Can view invoice history', 'codename': 'invoices.view_invoicehistory', 'description': 'Can view invoice history'},
     ]
 
     created = []
@@ -97,6 +119,13 @@ def create_roles(all_permissions):
             'clients.view_client', 'clients.add_client', 'clients.change_client',
             'clients.view_clientcontactperson', 'clients.add_clientcontactperson',
             'clients.change_clientcontactperson',
+            'quotations.view_quotation', 'quotations.add_quotation', 'quotations.change_quotation',
+            'quotations.view_quotationitem', 'quotations.add_quotationitem', 'quotations.change_quotationitem',
+            'quotations.send_quotation',
+            'invoices.view_invoice', 'invoices.add_invoice', 'invoices.change_invoice',
+            'invoices.view_invoiceitem', 'invoices.add_invoiceitem', 'invoices.change_invoiceitem',
+            'invoices.send_invoice', 'invoices.send_invoice_reminder',
+            'invoices.view_invoicehistory',
         ]
     )
     admin_role, created = Role.objects.get_or_create(
@@ -121,6 +150,8 @@ def create_roles(all_permissions):
             'accounts.view_dashboard', 'accounts.view_profile',
             'clients.view_client',
             'clients.view_clientcontactperson',
+            'quotations.view_quotation',
+            'invoices.view_invoice',
         ]
     )
     manager_role, created = Role.objects.get_or_create(
