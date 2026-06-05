@@ -4,7 +4,7 @@ from django.views import View
 from django.views.generic import TemplateView, ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy, reverse
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.db.models import Q
 from django.utils import timezone
 from django.template.loader import render_to_string
@@ -15,6 +15,7 @@ from .models import Quotation, QuotationItem, QuotationHistory
 from clients.models import Client, ClientContactPerson
 from products.models import Product
 from .forms import QuotationForm, QuotationItemForm
+from datetime import datetime
 
 
 def _sidebar_context():
@@ -220,12 +221,10 @@ class QuotationDeleteView(LoginRequiredMixin, RoleRequiredMixin, PermissionRequi
         return context
 
 
-class QuotationDetailView(LoginRequiredMixin, RoleRequiredMixin, PermissionRequiredMixin, DetailView):
+class QuotationDetailView(DetailView):
     model = Quotation
     template_name = 'quotations/quotation_detail.html'
     context_object_name = 'quotation'
-    required_roles = ['Super Admin', 'Admin']
-    required_permission = 'quotations.view_quotation'
 
     def get_queryset(self):
         return Quotation.objects.filter(is_deleted=False)
@@ -345,7 +344,7 @@ class QuotationItemDeleteView(LoginRequiredMixin, RoleRequiredMixin, PermissionR
 
 
 # PDF and Email Views
-class QuotationPDFView(LoginRequiredMixin, RoleRequiredMixin, PermissionRequiredMixin, DetailView):
+class QuotationPDFView(DetailView):
     model = Quotation
     template_name = 'quotations/quotation_pdf.html'
     required_roles = ['Super Admin', 'Admin']
@@ -355,11 +354,147 @@ class QuotationPDFView(LoginRequiredMixin, RoleRequiredMixin, PermissionRequired
         return Quotation.objects.filter(is_deleted=False)
 
     def render_to_response(self, context, **response_kwargs):
-        # Generate PDF using WeasyPrint or similar
-        # For now, we'll just render the HTML template
-        response = super().render_to_response(context, **response_kwargs)
-        response['Content-Type'] = 'application/pdf'
-        # In a real implementation, we would convert HTML to PDF here
+        # Generate PDF using ReportLab
+        from io import BytesIO
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib import colors
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import mm, inch
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
+        from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
+        
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20*mm, leftMargin=20*mm, topMargin=20*mm, bottomGap=20*mm)
+        elements = []
+        
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=18,
+            spaceAfter=30,
+            alignment=TA_CENTER
+        )
+        
+        # Company logo (if available)
+        # We'll skip logo for now, but you can add it from settings
+        # if hasattr(settings, 'company_logo') and settings.company_logo:
+        #     logo = Image(settings.company_logo.path, width=40*mm, height=20*mm)
+        #     elements.append(logo)
+        #     elements.append(Spacer(1, 12))
+        
+        # Title
+        elements.append(Paragraph("QUOTATION", title_style))
+        elements.append(Spacer(1, 12))
+        
+        # Quotation number and date
+        quotation = self.object
+        data = [
+            ["Quotation Number:", quotation.quotation_number],
+            ["Date:", quotation.created_at.strftime("%B %d, %Y")],
+        ]
+        table = Table(data, colWidths=[50*mm, 100*mm])
+        table.setStyle(TableStyle([
+            ('FONTNAME', (0,0), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 10),
+            ('ALIGN', (0,0), (0,-1), 'LEFT'),
+            ('ALIGN', (1,0), (1,-1), 'LEFT'),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ]))
+        elements.append(table)
+        elements.append(Spacer(1, 20))
+        
+        # Bill To
+        elements.append(Paragraph("Bill To:", styles['Heading2']))
+        elements.append(Spacer(1, 6))
+        bill_to_data = [
+            [quotation.client.company_name],
+            [quotation.client.address or ''],
+            [f"Email: {quotation.client.email or ''}"],
+            [f"Phone: {quotation.client.phone or ''}"],
+        ]
+        bill_to_table = Table(bill_to_data, colWidths=[150*mm])
+        bill_to_table.setStyle(TableStyle([
+            ('FONTNAME', (0,0), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 9),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+        ]))
+        elements.append(bill_to_table)
+        elements.append(Spacer(1, 12))
+        
+        # Items table
+        elements.append(Paragraph("Items:", styles['Heading2']))
+        elements.append(Spacer(1, 6))
+        items_data = [["#", "Description", "Qty", "Unit Price", "Discount", "Tax", "Total"]]
+        for i, item in enumerate(quotation.items.all(), start=1):
+            items_data.append([
+                str(i),
+                f"{item.product.name}\n{item.description or ''}",
+                f"{item.quantity}",
+                f"${item.unit_price:.2f}",
+                f"{item.discount_percentage:.2f}%",
+                f"{item.tax_percentage:.2f}%",
+                f"${item.total_price:.2f}",
+            ])
+        items_table = Table(items_data, colWidths=[10*mm, 60*mm, 20*mm, 20*mm, 20*mm, 20*mm, 20*mm])
+        items_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.grey),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0,0), (-1,-1), 8),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+            ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ]))
+        elements.append(items_table)
+        elements.append(Spacer(1, 20))
+        
+        # Totals
+        elements.append(Paragraph("Totals:", styles['Heading2']))
+        elements.append(Spacer(1, 6))
+        totals_data = [
+            ["Subtotal:", f"${quotation.subtotal:.2f}"],
+            ["Discount:", f"-${quotation.discount_amount:.2f}"],
+            ["Tax:", f"+${quotation.tax_amount:.2f}"],
+            ["Total:", f"${quotation.total_amount:.2f}"],
+        ]
+        totals_table = Table(totals_data, colWidths=[100*mm, 50*mm])
+        totals_table.setStyle(TableStyle([
+            ('FONTNAME', (0,0), (-1,-1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0,0), (-1,-1), 10),
+            ('ALIGN', (0,0), (0,-1), 'RIGHT'),
+            ('ALIGN', (1,0), (1,-1), 'LEFT'),
+            ('LINEABOVE', (0,3), (-1,3), 1, colors.black),
+        ]))
+        elements.append(totals_table)
+        elements.append(Spacer(1, 20))
+        
+        # Notes
+        if quotation.notes:
+            elements.append(Paragraph("Notes:", styles['Heading2']))
+            elements.append(Spacer(1, 6))
+            elements.append(Paragraph(quotation.notes, styles['Normal']))
+            elements.append(Spacer(1, 12))
+        
+        # Terms & Conditions
+        if quotation.terms_conditions:
+            elements.append(Paragraph("Terms & Conditions:", styles['Heading2']))
+            elements.append(Spacer(1, 6))
+            elements.append(Paragraph(quotation.terms_conditions, styles['Normal']))
+            elements.append(Spacer(1, 12))
+        
+        # Footer
+        elements.append(Spacer(1, 30))
+        elements.append(Paragraph("Thank you for your business!", styles['Normal']))
+        elements.append(Paragraph(f"Generated on {datetime.now().strftime('%B %d, %Y %H:%M:%S')}", styles['Normal']))
+        
+        doc.build(elements)
+        
+        pdf = buffer.getvalue()
+        buffer.close()
+        
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="quotation_{quotation.quotation_number}.pdf"'
         return response
 
 

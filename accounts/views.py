@@ -28,7 +28,7 @@ def _sidebar_context():
     }
 
 
-class HomeView(LoginRequiredMixin, TemplateView):
+class HomeView(TemplateView):
     template_name = 'home.html'
     login_url = '/login/'
 

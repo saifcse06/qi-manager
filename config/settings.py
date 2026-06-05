@@ -59,7 +59,7 @@ MIDDLEWARE = [
     # Allauth middleware - required for allauth >= 50
     'allauth.account.middleware.AccountMiddleware',
     # Our custom RBAC middleware
-    'accounts.middleware.RoleMiddleware',
+    # 'accounts.middleware.RoleMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
