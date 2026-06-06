@@ -47,6 +47,12 @@
                         <i class="nav-icon fas fa-home"></i>
                         <span>Dashboard</span>
                     </a>
+                    {% if request.user.is_superuser or request.user|has_role:"Super Admin" or request.user|has_role:"Admin" %}
+                    <a href="{% url 'user_dashboard' %}" class="nav-link {% if request.path == '/user-dashboard/' %}active{% endif %}">
+                        <i class="nav-icon fas fa-users-cog"></i>
+                        <span>User Dashboard</span>
+                    </a>
+                    {% endif %}
 
 <span class="nav-section-title">RBAC Management</span>
                      {% if request.user.is_superuser or request.user|has_role:"Super Admin" or request.user|has_role:"Admin" %}

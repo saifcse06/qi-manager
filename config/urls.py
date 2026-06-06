@@ -5,7 +5,7 @@ from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.conf.urls.static import static
 from accounts.views import (
-    index_view, HomeView, ProfileView,
+    index_view, HomeView, ProfileView, UserDashboardView,
     UserListView, UserCreateView, UserUpdateView, UserDeleteView, UserDetailView,
     RoleListView, RoleCreateView, RoleUpdateView, RoleDeleteView, RoleDetailView,
     PermissionListView, PermissionCreateView, PermissionUpdateView, PermissionDeleteView, PermissionDetailView,
@@ -79,6 +79,7 @@ urlpatterns = [
     # Main pages
     path('', index_view, name='index'),
     path('home/', HomeView.as_view(), name='home'),
+    path('user-dashboard/', UserDashboardView.as_view(), name='user_dashboard'),
     path('profile/', ProfileView.as_view(), name='profile'),
 ]
 

@@ -83,6 +83,52 @@ class HomeView(TemplateView):
         return context
 
 
+class UserDashboardView(TemplateView):
+    template_name = 'accounts/user_dashboard.html'
+    login_url = '/login/'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(_sidebar_context())
+        context['total_users'] = context['user_count']
+        context['total_roles'] = context['role_count']
+        context['total_permissions'] = context['permission_count']
+        context['active_users'] = User.objects.filter(is_active=True).count()
+        context['inactive_users'] = User.objects.filter(is_active=False).count()
+
+        # Role-wise user counts
+        roles = Role.objects.all().order_by('name')
+        role_summary = []
+        for role in roles:
+            role_summary.append({
+                'name': role.name,
+                'user_count': role.users.count(),
+                'permission_count': role.permissions.count(),
+            })
+        context['role_summary'] = role_summary
+
+        # Permissions per role (top 10)
+        context['top_roles'] = sorted(role_summary, key=lambda x: x['user_count'], reverse=True)[:10]
+
+        # Permission coverage: how many roles have each permission
+        from collections import Counter
+        perms = Permission.objects.all()
+        permission_coverage = []
+        for perm in perms:
+            role_count = perm.roles.count()
+            permission_coverage.append({
+                'codename': perm.codename,
+                'name': perm.name,
+                'role_count': role_count,
+            })
+        context['permission_coverage'] = sorted(permission_coverage, key=lambda x: x['role_count'], reverse=True)[:15]
+
+        context['unused_permissions'] = [p for p in permission_coverage if p['role_count'] == 0]
+        context['unused_permissions_count'] = len(context['unused_permissions'])
+
+        return context
+
+
 class ProfileView(LoginRequiredMixin, TemplateView):
     template_name = 'profile.html'
     login_url = '/login/'

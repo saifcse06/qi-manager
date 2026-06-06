@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block page_title %}User Dashboard{% endblock %}
+{% block page_subtitle %}Overview of users, roles and permissions{% endblock %}
+{% block content %}
+<!-- Stat Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card blue animate-in">
+            <div class="stat-card-body">
+                <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ total_users }}</div>
+                    <div class="stat-label">Total Users</div>
+                    <span class="stat-change up"><i class="fas fa-user-check"></i> {{ active_users }} active</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card green animate-in" style="animation-delay: 0.1s;">
+            <div class="stat-card-body">
+                <div class="stat-icon green"><i class="fas fa-user-shield"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ total_roles }}</div>
+                    <div class="stat-label">Total Roles</div>
+                    <span class="stat-change up"><i class="fas fa-key"></i> RBAC</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card purple animate-in" style="animation-delay: 0.2s;">
+            <div class="stat-card-body">
+                <div class="stat-icon purple"><i class="fas fa-lock"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ total_permissions }}</div>
+                    <div class="stat-label">Total Permissions</div>
+                    <span class="stat-change up"><i class="fas fa-check-circle"></i> Configured</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card orange animate-in" style="animation-delay: 0.3s;">
+            <div class="stat-card-body">
+                <div class="stat-icon orange"><i class="fas fa-user-slash"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ inactive_users }}</div>
+                    <div class="stat-label">Inactive Users</div>
+                    <span class="stat-change down"><i class="fas fa-clock"></i> Disabled</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 shadow-sm animate-in" style="animation-delay: 0.15s;">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="fas fa-user-cog me-2 text-primary"></i>Role-wise User Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Role</th>
+                                <th class="text-center">Users</th>
+                                <th class="text-center">Permissions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for role in role_summary %}
+                            <tr>
+                                <td class="fw-semibold">{{ role.name }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-{% if role.user_count > 0 %}success{% else %}secondary{% endif %}">
+                                        {{ role.user_count }}
+                                    </span>
+                                </td>
+                                <td class="text-center">{{ role.permission_count }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center py-4 text-muted">No roles configured.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 shadow-sm animate-in" style="animation-delay: 0.25s;">
+            <div class="card-header bg-transparent">
+                <h5 class="card-title mb-0"><i class="fas fa-chart-pie me-2 text-primary"></i>Permission Coverage</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Permission</th>
+                                <th class="text-center">Assigned Roles</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for perm in permission_coverage %}
+                            <tr>
+                                <td>
+                                    <code class="bg-light px-2 py-1 rounded">{{ perm.codename }}</code>
+                                    <br><small class="text-muted">{{ perm.name }}</small>
+                                </td>
+                                <td class="text-center">
+                                    {% if perm.role_count > 0 %}
+                                        <span class="badge bg-success">{{ perm.role_count }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Unused</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="text-center py-4 text-muted">No permissions found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if unused_permissions_count > 0 %}
+                <div class="alert alert-warning mt-3 mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>{{ unused_permissions_count }}</strong> permission(s) are not assigned to any role.
+                    <a href="{% url 'role_create' %}" class="alert-link ms-1">Assign them now</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
