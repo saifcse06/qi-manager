@@ -1,0 +1,151 @@
+{% extends 'reports/report_base.html' %}
+{% load static %}
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-2">
+        <a href="{% url 'reports:client_report' %}" class="btn btn-outline-secondary btn-sm w-100 mb-2">
+            <i class="fas fa-redo me-1"></i> Refresh
+        </a>
+    </div>
+    <div class="col-md-2">
+        <a href="{% url 'reports:client_export' %}?format=excel" class="btn btn-success btn-sm w-100 mb-2">
+            <i class="fas fa-file-excel me-1"></i> Export Excel
+        </a>
+    </div>
+    <div class="col-md-2">
+        <a href="{% url 'reports:client_export' %}?format=pdf" class="btn btn-danger btn-sm w-100 mb-2" target="_blank">
+            <i class="fas fa-file-pdf me-1"></i> Export PDF
+        </a>
+    </div>
+    <div class="col-md-2">
+        <button onclick="window.print()" class="btn btn-secondary btn-sm w-100 mb-2">
+            <i class="fas fa-print me-1"></i> Print
+        </button>
+    </div>
+</div>
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{{ report_title }} Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-6">
+                        <h4 class="text-primary mb-0">{{ total_clients }}</h4>
+                        <small class="text-muted">Total Clients</small>
+                    </div>
+                    <div class="col-md-6">
+                        <h4 class="text-success mb-0">{{ active_clients }}</h4>
+                        <small class="text-muted">Active Clients (with purchases)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% if top_clients %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Top 10 Clients</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="topClientsBarChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">All Clients</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Client Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th class="text-center">Total Invoices</th>
+                                <th class="text-center">Total Quotations</th>
+                                <th class="text-end">Total Spent</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for client in page_obj %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td><a href="{% url 'clients:client_detail' client.pk %}">{{ client.company_name }}</a></td>
+                                <td>{{ client.email|default:"-" }}</td>
+                                <td>{{ client.phone|default:"-" }}</td>
+                                <td class="text-center">{{ client.invoice_count }}</td>
+                                <td class="text-center">{{ client.quotation_count }}</td>
+                                <td class="text-end fw-bold">${{ client.total_spent|floatformat:2|default:"0.00" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4">No clients found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% if is_paginated %}
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+        </li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if top_clients %}
+<script>
+$(function () {
+    var ctx = document.getElementById('topClientsBarChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ top_clients_labels|safe }},
+            datasets: [{
+                label: 'Total Spent ($)',
+                data: {{ top_clients_data|safe }},
+                backgroundColor: ['#2c6fbb', '#3498db', '#2ecc71', '#f39c12', '#e74c3c', '#9b59b6', '#1abc9c', '#e67e22', '#95a5a6', '#34495e'],
+                borderWidth: 1,
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true } }
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

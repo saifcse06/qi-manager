@@ -49,6 +49,9 @@ INSTALLED_APPS = [
     
     # Payment Management App
     'payments',
+    
+    # Reports Management App
+    'reports',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

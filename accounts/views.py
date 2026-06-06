@@ -8,7 +8,13 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django.http import JsonResponse
 from django.views import View
-from django.db.models import Q
+from django.db.models import Q, Sum, Count, F
+from django.utils import timezone
+from datetime import datetime, timedelta
+from clients.models import Client
+from quotations.models import Quotation
+from invoices.models import Invoice, InvoiceHistory
+from payments.models import Payment
 from .models import User, Role, Permission
 from .forms import CustomUserCreationForm, CustomUserChangeForm, RoleForm, PermissionForm
 
@@ -39,6 +45,41 @@ class HomeView(TemplateView):
         context['total_roles'] = context['role_count']
         context['total_permissions'] = context['permission_count']
         context['active_users'] = User.objects.filter(is_active=True).count()
+
+        today = timezone.now().date()
+        current_month_start = today.replace(day=1)
+        current_year_start = today.replace(month=1, day=1)
+
+        context['total_clients'] = Client.objects.filter(is_deleted=False).count()
+        context['total_quotations'] = Quotation.objects.filter(is_deleted=False).count()
+        context['total_invoices'] = Invoice.objects.filter(is_deleted=False).count()
+        context['total_payments'] = Payment.objects.filter(is_deleted=False, status='completed').count()
+
+        context['today_sales'] = Payment.objects.filter(is_deleted=False, status='completed', payment_date=today).aggregate(total=Sum('amount'))['total'] or 0
+        context['month_sales'] = Payment.objects.filter(is_deleted=False, status='completed', payment_date__gte=current_month_start).aggregate(total=Sum('amount'))['total'] or 0
+        context['year_sales'] = Payment.objects.filter(is_deleted=False, status='completed', payment_date__gte=current_year_start).aggregate(total=Sum('amount'))['total'] or 0
+
+        context['pending_quotations'] = Quotation.objects.filter(is_deleted=False, status='sent').count()
+        context['approved_quotations'] = Quotation.objects.filter(is_deleted=False, status='approved').count()
+        context['rejected_quotations'] = Quotation.objects.filter(is_deleted=False, status='rejected').count()
+
+        context['paid_invoices'] = Invoice.objects.filter(is_deleted=False, status='paid').count()
+        context['unpaid_invoices'] = Invoice.objects.filter(is_deleted=False, status='unpaid').count()
+        context['overdue_invoices'] = Invoice.objects.filter(is_deleted=False, status__in=['unpaid', 'partial_paid'], due_date__lt=today).count()
+
+        invoices = Invoice.objects.filter(is_deleted=False, status__in=['unpaid', 'partial_paid']).select_related('client')
+        context['outstanding_amount'] = sum(inv.balance_due for inv in invoices)
+
+        top_clients = Client.objects.filter(is_deleted=False).annotate(
+            total_spent=Sum('invoices__paid_amount')
+        ).exclude(total_spent=None).order_by('-total_spent')[:5]
+        context['top_clients'] = top_clients
+
+        context['top_clients_list'] = [
+            {'name': c.company_name, 'spent': float(c.total_spent or 0)} for c in top_clients
+        ]
+        context['top_clients_labels'] = [c.company_name for c in top_clients]
+
         return context
 
 

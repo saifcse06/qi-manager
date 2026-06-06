@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block page_title %}{{ report_title }}{% endblock %}
+{% block page_subtitle %}Generate and export reports{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        {% block report_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

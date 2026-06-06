@@ -43,12 +43,14 @@
 
 /* ---------- GLOBAL RESET ---------- */
 *, *::before, *::after { box-sizing: border-box; }
+html { overflow-anchor: none; }
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--content-bg);
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-anchor: none;
 }
 
 /* ---------- SIDEBAR ---------- */

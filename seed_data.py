@@ -80,6 +80,9 @@ def create_permissions():
         {'name': 'Can delete payment', 'codename': 'payments.delete_payment', 'description': 'Can delete payment'},
         {'name': 'Can send payment receipt', 'codename': 'payments.send_payment_receipt', 'description': 'Can send payment receipt'},
         {'name': 'Can view payment history', 'codename': 'payments.view_paymenthistory', 'description': 'Can view payment history'},
+        # Report permissions
+        {'name': 'Can view reports', 'codename': 'reports.view_reports', 'description': 'Can view reports'},
+        {'name': 'Can export reports', 'codename': 'reports.export_report', 'description': 'Can export reports'},
     ]
 
     created = []
@@ -135,6 +138,7 @@ def create_roles(all_permissions):
             'invoices.view_invoicehistory',
             'payments.view_payment', 'payments.add_payment', 'payments.change_payment',
             'payments.view_paymenthistory',
+            'reports.view_reports', 'reports.export_report',
         ]
     )
     admin_role, created = Role.objects.get_or_create(

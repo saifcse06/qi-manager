@@ -396,9 +396,15 @@
                 showConfirmButton: false,
                 timer: 3000,
                 timerProgressBar: true,
+                focusConfirm: false,
                 didOpen: function (toast) {
                     toast.addEventListener('mouseenter', Swal.stopTimer);
                     toast.addEventListener('mouseleave', Swal.resumeTimer);
+                    var popup = Swal.getPopup();
+                    if (popup) popup.blur();
+                },
+                willClose: function () {
+                    window.scrollTo(0, window.scrollY);
                 }
             });
         },
@@ -474,6 +480,11 @@
 
     // Initialize on document ready
     $(document).ready(function () {
+        if (window.location.pathname === '/' || window.location.pathname === '/home/' || window.location.pathname.includes('/dashboard')) {
+            window.scrollTo(0, 0);
+            setTimeout(function () { window.scrollTo(0, 0); }, 100);
+            setTimeout(function () { window.scrollTo(0, 0); }, 500);
+        }
         QI.init();
     });
 
