@@ -42,9 +42,11 @@ class CompanySettingsForm(forms.ModelForm):
             ('Europe/Paris', 'Europe/Paris (CET)'),
             ('Asia/Kolkata', 'Asia/Kolkata (IST)'),
             ('Asia/Shanghai', 'Asia/Shanghai (CST)'),
+            ('Asia/Singapore', 'Asia/Singapore (SGT)'),
             ('Asia/Tokyo', 'Asia/Tokyo (JST)'),
             ('Australia/Sydney', 'Australia/Sydney (AEST)'),
         ]
+        self.fields['timezone'].widget.choices = self.fields['timezone'].choices
         self.fields['date_format'].choices = [
             ('Y-m-d', 'YYYY-MM-DD (2026-05-11)'),
             ('d/m/Y', 'DD/MM/YYYY (11/05/2026)'),
@@ -52,6 +54,7 @@ class CompanySettingsForm(forms.ModelForm):
             ('d M Y', 'DD Mon YYYY (11 May 2026)'),
             ('M d, Y', 'Mon DD, YYYY (May 11, 2026)'),
         ]
+        self.fields['date_format'].widget.choices = self.fields['date_format'].choices
 
 
 class EmailConfigurationForm(forms.ModelForm):

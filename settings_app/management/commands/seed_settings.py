@@ -21,7 +21,7 @@ class Command(BaseCommand):
                 'website': 'https://example.com',
                 'currency': 'USD',
                 'currency_symbol': '$',
-                'timezone': 'UTC',
+                'timezone': 'Asia/Singapore',
                 'date_format': 'Y-m-d',
             }
         )

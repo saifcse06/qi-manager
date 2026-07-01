@@ -66,6 +66,7 @@ python manage.py migrate
 ```bash
 python seed_data.py
 python seed_settings_data.py
+python seed_data.py && python seed_settings_data.py && python seed_products_data.py
 ```
 
 7. Create superuser:

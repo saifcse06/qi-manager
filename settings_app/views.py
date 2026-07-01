@@ -5,6 +5,7 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+import logging
 from accounts.views import (
     PermissionRequiredMixin, _sidebar_context
 )
@@ -18,11 +19,14 @@ from .forms import (
     PaymentMethodForm, PaymentTermForm,
 )
 
+logger = logging.getLogger('settings_app')
+
 
 def _get_or_create(model):
     """Get first instance or return empty instance for singleton models."""
-    if model.objects.exists():
-        return model.objects.first()
+    instance = model.objects.first()
+    if instance is not None:
+        return instance
     return model()
 
 
@@ -73,10 +77,12 @@ class SettingsDashboardView(LoginRequiredMixin, PermissionRequiredMixin, Templat
     def post(self, request, *args, **kwargs):
         """Handle all POST requests for settings form submissions."""
         if not request.user.has_permission('settings_app.change_settings'):
+            logger.warning('Permission denied for user=%s on settings POST', request.user.username)
             messages.error(request, "You don't have permission to modify settings.")
             return redirect(f'{request.path}?tab={request.POST.get("active_tab", "company")}')
 
         active_tab = request.POST.get('active_tab', 'company')
+        logger.debug('Settings POST received user=%s tab=%s', request.user.username, active_tab)
         handler_map = {
             'company': self._handle_company,
             'email': self._handle_email,
@@ -88,7 +94,12 @@ class SettingsDashboardView(LoginRequiredMixin, PermissionRequiredMixin, Templat
         }
         handler = handler_map.get(active_tab)
         if handler:
-            response = handler(request)
+            try:
+                response = handler(request)
+            except Exception as exc:
+                logger.exception('Unexpected error in %s handler user=%s error=%s', active_tab, request.user.username, exc)
+                messages.error(request, 'An unexpected error occurred. Check logs for details.')
+                response = None
             if response:
                 return response
         return redirect(f'{request.path}?tab={active_tab}')
@@ -98,9 +109,11 @@ class SettingsDashboardView(LoginRequiredMixin, PermissionRequiredMixin, Templat
         instance = _get_or_create(CompanySettings)
         form = CompanySettingsForm(request.POST, request.FILES, instance=instance)
         if form.is_valid():
-            form.save()
+            obj = form.save()
+            logger.info('Company settings updated by user=%s pk=%s name=%s', request.user.username, obj.pk, obj.company_name)
             messages.success(request, 'Company settings updated successfully.')
         else:
+            logger.warning('Company settings validation failed for user=%s errors=%s', request.user.username, form.errors.as_json())
             messages.error(request, 'Please correct the errors below.')
 
     def _handle_email(self, request):
@@ -108,9 +121,11 @@ class SettingsDashboardView(LoginRequiredMixin, PermissionRequiredMixin, Templat
         instance = _get_or_create(EmailConfiguration)
         form = EmailConfigurationForm(request.POST, instance=instance)
         if form.is_valid():
-            form.save()
+            obj = form.save()
+            logger.info('Email config updated by user=%s pk=%s host=%s', request.user.username, obj.pk, obj.smtp_host)
             messages.success(request, 'Email configuration updated successfully.')
         else:
+            logger.warning('Email config validation failed for user=%s errors=%s', request.user.username, form.errors.as_json())
             messages.error(request, 'Please correct the errors below.')
 
     def _handle_template(self, request):
@@ -123,8 +138,10 @@ class SettingsDashboardView(LoginRequiredMixin, PermissionRequiredMixin, Templat
         if form.is_valid():
             obj = form.save()
             action = 'updated' if template_id else 'created'
+            logger.info('Email template %s by user=%s pk=%s type=%s', action, request.user.username, obj.pk, obj.template_type)
             messages.success(request, f'Email template {action} successfully.')
         else:
+            logger.warning('Email template validation failed for user=%s errors=%s', request.user.username, form.errors.as_json())
             messages.error(request, 'Please correct the errors below.')
 
     def _handle_quotation(self, request):
@@ -132,9 +149,11 @@ class SettingsDashboardView(LoginRequiredMixin, PermissionRequiredMixin, Templat
         instance = _get_or_create(QuotationConfiguration)
         form = QuotationConfigurationForm(request.POST, instance=instance)
         if form.is_valid():
-            form.save()
+            obj = form.save()
+            logger.info('Quotation config updated by user=%s pk=%s format=%s', request.user.username, obj.pk, obj.number_format)
             messages.success(request, 'Quotation configuration updated successfully.')
         else:
+            logger.warning('Quotation config validation failed for user=%s errors=%s', request.user.username, form.errors.as_json())
             messages.error(request, 'Please correct the errors below.')
 
     def _handle_invoice(self, request):
@@ -142,9 +161,11 @@ class SettingsDashboardView(LoginRequiredMixin, PermissionRequiredMixin, Templat
         instance = _get_or_create(InvoiceConfiguration)
         form = InvoiceConfigurationForm(request.POST, request.FILES, instance=instance)
         if form.is_valid():
-            form.save()
+            obj = form.save()
+            logger.info('Invoice config updated by user=%s pk=%s format=%s', request.user.username, obj.pk, obj.number_format)
             messages.success(request, 'Invoice configuration updated successfully.')
         else:
+            logger.warning('Invoice config validation failed for user=%s errors=%s', request.user.username, form.errors.as_json())
             messages.error(request, 'Please correct the errors below.')
 
     def _handle_payment_method(self, request):
@@ -159,13 +180,14 @@ class SettingsDashboardView(LoginRequiredMixin, PermissionRequiredMixin, Templat
                 pass
         form = PaymentMethodForm(request.POST, **kwargs)
         if form.is_valid():
-            # Ensure only one default
             if form.cleaned_data.get('is_default'):
                 PaymentMethod.objects.filter(is_default=True).exclude(id=method_id).update(is_default=False)
-            form.save()
+            obj = form.save()
             action = 'updated' if is_update else 'created'
+            logger.info('Payment method %s by user=%s pk=%s name=%s', action, request.user.username, obj.pk, obj.name)
             messages.success(request, f'Payment method {action} successfully.')
         else:
+            logger.warning('Payment method validation failed for user=%s errors=%s', request.user.username, form.errors.as_json())
             messages.error(request, 'Please correct the errors below.')
 
     def _handle_payment_term(self, request):
@@ -180,13 +202,14 @@ class SettingsDashboardView(LoginRequiredMixin, PermissionRequiredMixin, Templat
                 pass
         form = PaymentTermForm(request.POST, **kwargs)
         if form.is_valid():
-            # Ensure only one default
             if form.cleaned_data.get('is_default'):
                 PaymentTerm.objects.filter(is_default=True).exclude(id=term_id).update(is_default=False)
-            form.save()
+            obj = form.save()
             action = 'updated' if is_update else 'created'
+            logger.info('Payment term %s by user=%s pk=%s name=%s', action, request.user.username, obj.pk, obj.name)
             messages.success(request, f'Payment term {action} successfully.')
         else:
+            logger.warning('Payment term validation failed for user=%s errors=%s', request.user.username, form.errors.as_json())
             messages.error(request, 'Please correct the errors below.')
 
 
